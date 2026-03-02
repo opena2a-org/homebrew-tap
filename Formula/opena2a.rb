@@ -1,8 +1,8 @@
 class Opena2a < Formula
   desc "Security platform CLI for AI agents - scan, verify, and protect"
   homepage "https://opena2a.org"
-  url "https://registry.npmjs.org/opena2a/-/opena2a-0.1.0.tgz"
-  sha256 :no_check
+  url "https://registry.npmjs.org/opena2a-cli/-/opena2a-cli-0.1.0.tgz"
+  sha256 "15cf1afec9bd2d2f5fa125461cf7ad787f2c08ed"
   license "Apache-2.0"
 
   depends_on "node"

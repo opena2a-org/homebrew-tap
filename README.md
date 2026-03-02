@@ -33,7 +33,7 @@ opena2a guard
 ## Alternative Installation
 
 ```bash
-npm install -g opena2a
+npm install -g opena2a-cli
 ```
 
 ## License
