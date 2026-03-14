@@ -74,7 +74,7 @@ secretless-ai protect-mcp       # Protect MCP server credential configs
 secretless-ai doctor            # System health check
 ```
 
-Full documentation: [opena2a.org/secretless](https://opena2a.org/secretless)
+Full documentation: [opena2a.org/secretless](https://github.com/opena2a-org/secretless-ai)
 
 ---
 
@@ -92,7 +92,7 @@ hackmyagent harden-soul         # Generate hardened config from results
 hackmyagent secure --category credentials,injection,permissions
 ```
 
-Full documentation: [hackmyagent.com](https://hackmyagent.com)
+Full documentation: [hackmyagent.com](https://github.com/opena2a-org/hackmyagent)
 
 ---
 
