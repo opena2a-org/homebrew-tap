@@ -55,7 +55,7 @@ opena2a secrets                 # Manage secrets (via Secretless AI)
 opena2a shield                  # Detect shadow AI in your environment
 ```
 
-Full documentation: [opena2a.org/cli](https://opena2a.org/cli)
+Full documentation: [opena2a.org/cli](https://github.com/opena2a-org/opena2a)
 
 ---
 
