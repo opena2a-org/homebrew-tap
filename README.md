@@ -3,9 +3,9 @@
 # OpenA2A Homebrew Tap
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Formulae](https://img.shields.io/badge/formulae-3-brightgreen)]()
+[![Formulae](https://img.shields.io/badge/formulae-4-brightgreen)]()
 
-Install the OpenA2A security tools with Homebrew. Three CLIs that protect AI agent ecosystems -- scan for vulnerabilities, keep secrets out of AI context, and enforce behavioral governance.
+Install the OpenA2A security tools with Homebrew. Four CLIs that protect AI agent ecosystems -- scan for vulnerabilities, keep secrets out of AI context, verify trust, and enforce behavioral governance.
 
 [Website](https://opena2a.org) | [CLI Docs](https://opena2a.org/cli) | [OASB Standards](https://oasb.ai) | [GitHub](https://github.com/opena2a-org)
 
@@ -15,7 +15,7 @@ Install the OpenA2A security tools with Homebrew. Three CLIs that protect AI age
 
 ```bash
 brew tap opena2a-org/tap
-brew install opena2a secretless-ai hackmyagent
+brew install opena2a secretless-ai hackmyagent ai-trust
 ```
 
 ## Formulae
@@ -25,6 +25,7 @@ brew install opena2a secretless-ai hackmyagent
 | `opena2a` | 0.5.11 | [opena2a-cli](https://www.npmjs.com/package/opena2a-cli) |
 | `secretless-ai` | 0.12.4 | [secretless-ai](https://www.npmjs.com/package/secretless-ai) |
 | `hackmyagent` | 0.10.1 | [hackmyagent](https://www.npmjs.com/package/hackmyagent) |
+| `ai-trust` | 0.1.1 | [ai-trust](https://www.npmjs.com/package/ai-trust) |
 
 ---
 
@@ -81,6 +82,22 @@ hackmyagent secure --category credentials,injection,permissions
 ```
 
 Full documentation: [hackmyagent.com](https://hackmyagent.com)
+
+---
+
+### ai-trust
+
+**Check the trust score of any AI package before you install it.** Queries the OpenA2A trust graph for security scans, community consensus, dependency risk, and known advisories.
+
+```bash
+brew install ai-trust
+
+ai-trust query mcp-server-fetch  # Look up trust data for a package
+ai-trust query langchain --type ai_tool
+ai-trust advisories              # List recent security advisories
+```
+
+Full documentation: [github.com/opena2a-org/ai-trust](https://github.com/opena2a-org/ai-trust)
 
 ---
 

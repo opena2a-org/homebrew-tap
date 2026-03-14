@@ -1,0 +1,18 @@
+class AiTrust < Formula
+  desc "Trust verification CLI for AI packages - check before you install"
+  homepage "https://github.com/opena2a-org/ai-trust"
+  url "https://registry.npmjs.org/ai-trust/-/ai-trust-0.1.1.tgz"
+  sha256 "3d9dc474f5a241419251a5ef7f64bdb2d4cadbafc41e2c29aeceda69f7d7fbec"
+  license "Apache-2.0"
+
+  depends_on "node"
+
+  def install
+    system "npm", "install", *std_npm_args
+    bin.install_symlink Dir["#{libexec}/bin/*"]
+  end
+
+  test do
+    assert_match "ai-trust", shell_output("#{bin}/ai-trust --help")
+  end
+end
