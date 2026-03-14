@@ -15,8 +15,18 @@ Install the OpenA2A security tools with Homebrew. Four CLIs that protect AI agen
 
 ```bash
 brew tap opena2a-org/tap
-brew install opena2a secretless-ai hackmyagent ai-trust
+brew install opena2a            # Full suite (includes HMA, Secretless, ai-trust)
 ```
+
+Or install individual tools standalone:
+
+```bash
+brew install secretless-ai      # Secret protection only
+brew install hackmyagent        # Security scanning only
+brew install ai-trust           # Trust verification only
+```
+
+> **Note:** `opena2a` bundles all three tools as dependencies. Install it for the full suite, or install individual formulas if you only need one capability.
 
 ## Formulae
 
@@ -31,7 +41,7 @@ brew install opena2a secretless-ai hackmyagent ai-trust
 
 ### opena2a
 
-**One CLI for all OpenA2A security tools.** Scan, protect, benchmark, and monitor AI agents from a single command. Detect Shadow AI -- unmanaged agents and MCP servers running in your environment.
+**One CLI for all OpenA2A security tools.** Scan, protect, benchmark, and monitor AI agents from a single command. Detect Shadow AI -- unmanaged agents and MCP servers running in your environment. Bundles HackMyAgent, Secretless AI, and ai-trust as integrated subcommands.
 
 ```bash
 brew install opena2a
@@ -40,7 +50,8 @@ opena2a init                    # Initialize security config
 opena2a protect                 # Protect MCP configs, skills, manifests
 opena2a guard                   # Runtime guardrails for agent execution
 opena2a scan-soul               # Behavioral governance (OASB-2)
-opena2a scan <package>          # Scan a package for vulnerabilities
+opena2a scan <package>          # Scan a package (via HackMyAgent)
+opena2a secrets                 # Manage secrets (via Secretless AI)
 opena2a shield                  # Detect shadow AI in your environment
 ```
 
@@ -110,20 +121,21 @@ hackmyagent secure --deep       # 3. Scan for vulnerabilities
 opena2a scan-soul               # 4. Verify behavioral governance
 ```
 
-**Secretless** keeps credentials safe during development. **HackMyAgent** finds security issues in your agents. **OpenA2A** orchestrates the full security workflow.
+**Secretless** keeps credentials safe during development. **HackMyAgent** finds security issues in your agents. **OpenA2A** orchestrates the full security workflow. All three are bundled when you install `opena2a`, or install them individually for standalone use.
 
 ## Upgrade
 
 ```bash
-brew upgrade opena2a secretless-ai hackmyagent
+brew upgrade opena2a secretless-ai hackmyagent ai-trust
 ```
 
 ## Alternative Installation
 
 ```bash
-npm install -g opena2a-cli
-npm install -g secretless-ai
-npm install -g hackmyagent
+npm install -g opena2a-cli      # Full suite (auto-installs HMA, Secretless, ai-trust)
+npm install -g secretless-ai    # Standalone
+npm install -g hackmyagent      # Standalone
+npm install -g ai-trust         # Standalone
 ```
 
 ## License
