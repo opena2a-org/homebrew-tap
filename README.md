@@ -89,6 +89,7 @@ hackmyagent secure              # Full security scan
 hackmyagent secure --deep       # LLM-powered semantic analysis
 hackmyagent scan-soul           # 72 behavioral governance controls (OASB-2)
 hackmyagent harden-soul         # Generate hardened config from results
+hackmyagent trust <package>     # Check package trust before installing
 hackmyagent secure --category credentials,injection,permissions
 ```
 
@@ -103,9 +104,9 @@ Full documentation: [hackmyagent.com](https://github.com/opena2a-org/hackmyagent
 ```bash
 brew install ai-trust
 
-ai-trust query mcp-server-fetch  # Look up trust data for a package
-ai-trust query langchain --type ai_tool
-ai-trust advisories              # List recent security advisories
+ai-trust check mcp-server-fetch  # Single package trust lookup
+ai-trust audit package.json      # Audit all dependencies
+ai-trust batch pkg1 pkg2 pkg3    # Batch lookup
 ```
 
 Full documentation: [github.com/opena2a-org/ai-trust](https://github.com/opena2a-org/ai-trust)
