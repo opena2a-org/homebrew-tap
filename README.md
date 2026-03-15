@@ -104,9 +104,9 @@ Full documentation: [hackmyagent.com](https://github.com/opena2a-org/hackmyagent
 ```bash
 brew install ai-trust
 
-ai-trust check mcp-server-fetch  # Single package trust lookup
-ai-trust audit package.json      # Audit all dependencies
-ai-trust batch pkg1 pkg2 pkg3    # Batch lookup
+ai-trust check server-filesystem  # MCP shorthand (resolves to @modelcontextprotocol/server-filesystem)
+ai-trust audit package.json       # Audit all dependencies
+ai-trust batch server-fetch express  # Batch lookup (MCP names auto-resolve)
 ```
 
 Full documentation: [github.com/opena2a-org/ai-trust](https://github.com/opena2a-org/ai-trust)
