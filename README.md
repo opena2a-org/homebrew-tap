@@ -32,10 +32,10 @@ brew install ai-trust           # Trust verification only
 
 | Formula | Version | Package |
 |---------|---------|---------|
-| `opena2a` | 0.7.2 | [opena2a-cli](https://www.npmjs.com/package/opena2a-cli) |
-| `secretless-ai` | 0.12.4 | [secretless-ai](https://www.npmjs.com/package/secretless-ai) |
-| `hackmyagent` | 0.10.1 | [hackmyagent](https://www.npmjs.com/package/hackmyagent) |
-| `ai-trust` | 0.1.3 | [ai-trust](https://www.npmjs.com/package/ai-trust) |
+| `opena2a` | 0.8.11 | [opena2a-cli](https://www.npmjs.com/package/opena2a-cli) |
+| `secretless-ai` | 0.12.5 | [secretless-ai](https://www.npmjs.com/package/secretless-ai) |
+| `hackmyagent` | 0.11.12 | [hackmyagent](https://www.npmjs.com/package/hackmyagent) |
+| `ai-trust` | 0.2.4 | [ai-trust](https://www.npmjs.com/package/ai-trust) |
 
 ---
 
@@ -80,7 +80,7 @@ Full documentation: [opena2a.org/secretless](https://github.com/opena2a-org/secr
 
 ### hackmyagent
 
-**Find what can go wrong before an attacker does.** Security scanner for MCP servers, A2A agents, LangChain tools, CrewAI setups, and other AI agent frameworks. 147 checks, 55 adversarial payloads, auto-fix with rollback.
+**Find what can go wrong before an attacker does.** Security scanner for MCP servers, A2A agents, LangChain tools, CrewAI setups, and other AI agent frameworks. 204 checks, 115 adversarial payloads, auto-fix with rollback.
 
 ```bash
 brew install hackmyagent
