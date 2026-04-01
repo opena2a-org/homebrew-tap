@@ -1,8 +1,8 @@
 class SecretlessAi < Formula
   desc "Keep secrets out of AI coding tools - works with Claude Code, Cursor, Copilot"
   homepage "https://github.com/opena2a-org/secretless-ai"
-  url "https://registry.npmjs.org/secretless-ai/-/secretless-ai-0.13.0.tgz"
-  sha256 "ec535bfab8435d782d6d1f2edad1b55e2a47c6f61375b10084ec459d01134325"
+  url "https://registry.npmjs.org/secretless-ai/-/secretless-ai-0.14.0.tgz"
+  sha256 "da5622ea5983015932fe62aeb3ed44fb6d2c5e7359c9432e44dabd49c7a9b06b"
   license "Apache-2.0"
 
   depends_on "node"
