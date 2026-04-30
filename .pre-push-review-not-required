@@ -1,1 +1,1 @@
-Ruby Formula files + version table + docs only — no executable code; bumps mirror npm releases gated on full /release-test before tag-push.
+homebrew-tap is a Ruby-formula tracker for npm-published CLIs; opt out of the 8-phase quality gate (release-test runs upstream in each tool's repo).
