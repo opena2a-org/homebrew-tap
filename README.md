@@ -2,6 +2,7 @@
 
 # OpenA2A Homebrew Tap
 
+[![Status: stable](https://img.shields.io/badge/status-stable-green)](./STATUS.md)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Formulae](https://img.shields.io/badge/formulae-4-brightgreen)]()
 
