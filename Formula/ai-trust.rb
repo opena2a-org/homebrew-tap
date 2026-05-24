@@ -1,8 +1,8 @@
 class AiTrust < Formula
   desc "Trust verification CLI for AI packages - check before you install"
   homepage "https://github.com/opena2a-org/ai-trust"
-  url "https://registry.npmjs.org/ai-trust/-/ai-trust-0.7.1.tgz"
-  sha256 "d4f8093ce145010fc210d9797913f428e8fb535334966f80c72415595b6d260f"
+  url "https://registry.npmjs.org/ai-trust/-/ai-trust-0.7.2.tgz"
+  sha256 "67412a7ab0c38107b8e11107ee85f300a8722fa3558259f5e7caf2eec7532665"
   license "Apache-2.0"
 
   depends_on "node"
