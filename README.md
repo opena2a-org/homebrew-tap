@@ -33,7 +33,7 @@ brew install ai-trust           # Trust verification only
 
 | Formula | Version | Package |
 |---------|---------|---------|
-| `opena2a` | 0.10.11 | [opena2a-cli](https://www.npmjs.com/package/opena2a-cli) |
+| `opena2a` | 0.10.12 | [opena2a-cli](https://www.npmjs.com/package/opena2a-cli) |
 | `secretless-ai` | 0.20.0 | [secretless-ai](https://www.npmjs.com/package/secretless-ai) |
 | `hackmyagent` | 0.25.1 | [hackmyagent](https://www.npmjs.com/package/hackmyagent) |
 | `ai-trust` | 0.7.6 | [ai-trust](https://www.npmjs.com/package/ai-trust) |
