@@ -1,8 +1,8 @@
 class Hackmyagent < Formula
-  desc "Security scanner for AI agents - find vulnerabilities before attackers do"
+  desc "Security scanner for AI agents: static, semantic and adversarial analysis"
   homepage "https://github.com/opena2a-org/hackmyagent"
-  url "https://registry.npmjs.org/hackmyagent/-/hackmyagent-0.25.2.tgz"
-  sha256 "bb69ed64ae5cc150339d393658eb3ef9959332a55b4dc9a55560dcc3bad701d6"
+  url "https://registry.npmjs.org/hackmyagent/-/hackmyagent-0.26.0.tgz"
+  sha256 "5a0834e6e6bb2721d6624f741241b227a8e1f8d83911a07470e133f3cd34c6dc"
   license "Apache-2.0"
 
   depends_on "node"
