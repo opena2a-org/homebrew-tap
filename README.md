@@ -81,7 +81,7 @@ Full documentation: [opena2a.org/secretless](https://github.com/opena2a-org/secr
 
 ### hackmyagent
 
-**Find what can go wrong before an attacker does.** Security scanner for MCP servers, A2A agents, LangChain tools, CrewAI setups, and other AI agent frameworks. 204 checks, 115 adversarial payloads, auto-fix with rollback.
+**Find what can go wrong before an attacker does.** Security scanner for MCP servers, A2A agents, LangChain tools, CrewAI setups, and other AI agent frameworks. 310 static checks, 29 NanoMind semantic checks, 164 adversarial payloads as of 2026-08-25 (hackmyagent 0.32.0), auto-fix with rollback.
 
 ```bash
 brew install hackmyagent
