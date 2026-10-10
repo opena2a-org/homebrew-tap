@@ -292,6 +292,11 @@ hackmyagent|' "brew install \\" 'hackmyagent'
 expect_fail install-continued-after-prefix "$install" '/^brew install opena2a-org\/tap\/opena2a$/c\
 sudo \\\
 brew install hackmyagent' "sudo \\" 'brew install hackmyagent'
+# A prefix word continued onto a line that starts with its flag: the words of
+# the line that ends in a backslash are held, so sudo still comes before brew.
+expect_fail install-continued-after-prefix-flag "$install" '/^brew install opena2a-org\/tap\/opena2a$/c\
+sudo \\\
+-u admin brew install hackmyagent' "sudo \\" '-u admin brew install hackmyagent'
 # A `$ ` prompt line outside code blocks.
 expect_fail prompt-line-outside-code "$install" '$a\
 \
