@@ -129,6 +129,15 @@ Full documentation: [github.com/opena2a-org/ai-trust](https://github.com/opena2a
 
 ## How They Work Together
 
+This workflow uses the standalone `secretless-ai` and `hackmyagent` commands, which the Quick Start does not put on your PATH. Install their formulae first:
+
+```bash
+brew install opena2a-org/tap/secretless-ai
+brew install opena2a-org/tap/hackmyagent
+```
+
+Then run:
+
 ```bash
 secretless-ai init              # 1. Protect secrets from AI tools
 opena2a init                    # 2. Set up security configuration
@@ -136,13 +145,16 @@ hackmyagent secure --deep       # 3. Scan for vulnerabilities
 opena2a scan-soul               # 4. Verify behavioral governance
 ```
 
-**Secretless** keeps credentials safe during development. **HackMyAgent** finds security issues in your agents. **OpenA2A** orchestrates the full security workflow. All three are bundled when you install `opena2a`, or install them individually for standalone use.
+**Secretless** keeps credentials safe during development. **HackMyAgent** finds security issues in your agents. **OpenA2A** orchestrates the full security workflow. `opena2a` bundles all three for its own subcommands; the standalone `secretless-ai` and `hackmyagent` commands come from their own formulae.
 
 ## Upgrade
 
 ```bash
-brew upgrade opena2a secretless-ai hackmyagent ai-trust
+brew upgrade                    # Upgrade every outdated formula, these included
+brew upgrade opena2a            # Or upgrade one formula you installed
 ```
+
+Name only formulae you installed: `brew upgrade` stops with `Refusing to load formula ... from untrusted tap` on a formula from this tap that is not installed.
 
 ## Alternative Installation
 
