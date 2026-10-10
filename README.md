@@ -165,7 +165,7 @@ npm install -g hackmyagent      # Standalone
 npm install -g ai-trust         # Standalone
 ```
 
-As with the formula, `opena2a-cli` puts only the `opena2a` command on your PATH; its bundled copies of HackMyAgent, Secretless AI and ai-trust are pinned by `opena2a-cli` and can be older than the standalone packages.
+As with the formula, `opena2a-cli` puts only the `opena2a` command on your PATH; its bundled copies of HackMyAgent, Secretless AI and ai-trust are set by `opena2a-cli` and can be older than the standalone packages.
 
 ## License
 
