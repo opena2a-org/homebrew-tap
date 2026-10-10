@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Checks README.md (or the file given as the first argument) against the
 # formulae in this tap:
-# - every command line that runs `brew install`, including indented lines and
-#   `$ ` prompt lines in captured output, names each formula argument as
-#   opena2a-org/tap/<formula> for a formula in Formula/, because current
-#   Homebrew refuses a bare name from an untrusted third-party tap. Inline code
-#   in prose is not checked;
-# - no `brew upgrade` line names more than one formula: after the Quick Start
-#   only opena2a is installed, and Homebrew refuses to load the others;
+# - every `brew install` command, including one on an indented line, on a `$ `
+#   prompt line in captured output or after another command on the same line,
+#   names each formula argument as opena2a-org/tap/<formula> for a formula in
+#   Formula/, because current Homebrew refuses a bare name from an untrusted
+#   third-party tap. Inline code in prose is not checked;
+# - no line names more than one formula in its `brew upgrade` commands: after
+#   the Quick Start only opena2a is installed, and Homebrew refuses to load the
+#   others;
 # - a section that runs hackmyagent, secretless-ai or ai-trust in a code block
 #   names that formula's opena2a-org/tap/ install first, because installing
 #   opena2a does not put those commands on PATH;
@@ -37,51 +38,69 @@ done
 
 # Both brew checks split a line into commands at ;, &, &&, | and || and read
 # arguments only from a command that is itself `brew install` or
-# `brew upgrade`, so `brew install opena2a-org/tap/opena2a && opena2a --version`
-# is one install of one formula.
-bare=$(awk -v formulae="$formulae" '
+# `brew upgrade`, wherever it stands on the line and however many blanks
+# separate its words. `brew install opena2a-org/tap/opena2a && opena2a --version`
+# is one install of one formula, and `cd /tmp && brew  install hackmyagent` is
+# an install of a bare name.
+#
+# They read the README through commands, which turns & and | into ; and every
+# tab, carriage return, form feed and vertical tab into a space, and leaves
+# the line numbers as they are. awk then splits a line at one character only
+# (";", or a run of spaces). Splitting at a regular expression takes time
+# quadratic in the number of pieces in the awk macOS ships, so one line with a
+# million separators or arguments took tens of seconds to check. numbered
+# prints the README lines that the line numbers on its input name.
+commands() {
+  LC_ALL=C tr '&|\t\r\f\v' ';;    ' < "$readme"
+}
+
+numbered() {
+  awk 'BEGIN { while ((getline n < "-") > 0) want[n] = 1 } FNR in want { print FNR ": " $0 }' "$readme"
+}
+
+bare=$(commands | awk -v formulae="$formulae" '
   BEGIN { split(formulae, f, " "); for (i in f) known[f[i]] = 1 }
-  /^[$[:space:]]*brew install / {
+  /brew +install / {
     line = $0
     sub(/#.*/, "", line)
-    m = split(line, cmds, /[;&|]/)
+    m = split(line, cmds, ";")
     bad = 0
     for (c = 1; c <= m && !bad; c++) {
       args = cmds[c]
-      if (!sub(/^[$[:space:]]*brew install /, "", args)) continue
-      n = split(args, a, /[[:space:]]+/)
+      if (!sub(/^[$ ]*brew +install /, "", args)) continue
+      n = split(args, a, " ")
       for (i = 1; i <= n; i++) {
-        if (a[i] == "" || a[i] ~ /^-/) continue
+        if (a[i] ~ /^-/) continue
         name = a[i]
         if (sub(/^opena2a-org\/tap\//, "", name) && (name in known)) continue
         bad = 1
         break
       }
     }
-    if (bad) print FNR ": " $0
-  }' "$readme")
+    if (bad) print FNR
+  }' | numbered)
 if [ -n "$bare" ]; then
   echo "FAIL: brew install of a formula not named opena2a-org/tap/<formula in Formula/>:"
   echo "$bare"
   fail=1
 fi
 
-upgrade=$(awk '
-  /^[$[:space:]]*brew upgrade / {
+# The formulae are counted over the whole line, so `brew upgrade opena2a;
+# brew upgrade hackmyagent` names two.
+upgrade=$(commands | awk '
+  /brew +upgrade / {
     line = $0
     sub(/#.*/, "", line)
-    m = split(line, cmds, /[;&|]/)
-    bad = 0
+    m = split(line, cmds, ";")
+    count = 0
     for (c = 1; c <= m; c++) {
       args = cmds[c]
-      if (!sub(/^[$[:space:]]*brew upgrade /, "", args)) continue
-      n = split(args, a, /[[:space:]]+/)
-      count = 0
-      for (i = 1; i <= n; i++) if (a[i] != "" && a[i] !~ /^-/) count++
-      if (count > 1) bad = 1
+      if (!sub(/^[$ ]*brew +upgrade /, "", args)) continue
+      n = split(args, a, " ")
+      for (i = 1; i <= n; i++) if (a[i] !~ /^-/) count++
     }
-    if (bad) print FNR ": " $0
-  }' "$readme")
+    if (count > 1) print FNR
+  }' | numbered)
 if [ -n "$upgrade" ]; then
   echo "FAIL: brew upgrade names several formulae, which fails for any not installed:"
   echo "$upgrade"
@@ -92,11 +111,17 @@ uninstalled=$(awk -v formulae="$formulae" '
   BEGIN { split(formulae, f, " "); for (i in f) if (f[i] != "opena2a") standalone[f[i]] = 1 }
   # A "# comment" line inside a fenced block is shell, not a heading.
   !incode && /^#+ / { section = $0; delete named }
+  # Every opena2a-org/tap/<name> on the line, read from the pieces between "/"
+  # so that the time stays linear in the number of names: <name> starts the
+  # piece after a "tap" piece that follows a piece ending in opena2a-org. A
+  # name that fills its piece is not also the opena2a-org of a later name.
   {
-    line = $0
-    while (match(line, /opena2a-org\/tap\/[a-z0-9-]+/)) {
-      named[substr(line, RSTART + 16, RLENGTH - 16)] = 1
-      line = substr(line, RSTART + RLENGTH)
+    n = split($0, part, "/")
+    for (i = 3; i <= n; i++) {
+      if (part[i - 1] != "tap" || part[i - 2] !~ /opena2a-org$/) continue
+      if (!match(part[i], /^[a-z0-9-]+/)) continue
+      named[substr(part[i], 1, RLENGTH)] = 1
+      if (RLENGTH == length(part[i])) i += 2
     }
   }
   /^[[:space:]]*```/ { incode = !incode; next }
@@ -134,19 +159,38 @@ check_before_30 "opena2a --version line" "$(grep -nxF "opena2a $version" "$readm
 
 # Neither the formula nor `npm install -g opena2a-cli` puts hackmyagent,
 # secretless-ai or ai-trust on PATH; they are private dependencies of opena2a.
-# Catches auto-install, autoinstall and auto install, and "automatically
-# installs" and "installs ... automatically" in a sentence that also names a
-# standalone tool or says "tools". A sentence with "install" and "automatic"
-# that names none of them, such as "Install the formula, then opena2a runs
-# automatic checks.", passes.
-autoinstall=$(awk '{
-  line = tolower($0)
-  if (line ~ /auto[-[:space:]]?install/) { print FNR ":" $0; next }
-  n = split(line, sentence, ".")
-  for (i = 1; i <= n; i++)
-    if (sentence[i] ~ /automatic[a-z]*[[:space:]]+install|install.*automatic/ &&
-        sentence[i] ~ /tools|hma|hackmyagent|secretless|ai-trust/) { print FNR ":" $0; next }
-}' "$readme")
+# Catches auto-install, autoinstall and auto install, also when the hyphen is
+# one of U+2010 to U+2015, and "automatically installs" and "installs ...
+# automatically" in a sentence that also names a standalone tool or says
+# "tools", "CLI", "commands" or "binaries". A sentence with "install" and
+# "automatic" that names none of them, such as "Install the formula, then
+# opena2a runs automatic checks.", passes, and so does one whose only "cli" is
+# the package name opena2a-cli.
+#
+# A sentence ends at a "." that a blank or the end of the line follows, so the
+# dots in "0.10.13" do not end one. The line is split at every "." and the
+# pieces of one sentence are read in turn: installs is set once a piece of the
+# sentence has said "install", which is how "install ... automatic" is seen
+# across a dot.
+dashes=$(printf '\342\200\220|\342\200\221|\342\200\222|\342\200\223|\342\200\224|\342\200\225')
+autoinstall=$(awk -v dashes="$dashes" '
+  BEGIN { auto = "auto([-[:space:]]|" dashes ")?install" }
+  {
+    line = tolower($0)
+    if (line ~ auto) { print FNR ":" $0; next }
+    n = split(line, part, ".")
+    claim = named = installs = 0
+    for (i = 1; i <= n; i++) {
+      p = part[i]
+      if (p ~ /automatic[a-z]*[[:space:]]+install|install.*automatic/ || (installs && p ~ /automatic/)) claim = 1
+      if (p ~ /install/) installs = 1
+      if (p ~ /tools|command|binar|hma|hackmyagent|secretless|ai-trust/ ||
+          p ~ /(^|[^a-z0-9-])clis?([^a-z0-9]|$)/) named = 1
+      if (i < n && part[i + 1] !~ /^[[:space:]]/ && !(i + 1 == n && part[n] == "")) continue
+      if (claim && named) { print FNR ":" $0; next }
+      claim = named = installs = 0
+    }
+  }' "$readme")
 if [ -n "$autoinstall" ]; then
   echo "FAIL: README says opena2a installs the standalone tools:"
   echo "$autoinstall"
