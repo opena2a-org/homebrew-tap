@@ -267,6 +267,11 @@ expect_fail install-continued "$install" 's|^brew install opena2a-org/tap/opena2
 # the next line is a word of its own, not the end of install.
 expect_fail install-continued-at-column-0 "$install" 's|^brew install opena2a-org/tap/opena2a$|brew install \\\
 hackmyagent|' "brew install \\" 'hackmyagent'
+# A prefix word continued onto the next line, which starts with brew: the
+# command is brew install, and both lines are named.
+expect_fail install-continued-after-prefix "$install" '/^brew install opena2a-org\/tap\/opena2a$/c\
+sudo \\\
+brew install hackmyagent' "sudo \\" 'brew install hackmyagent'
 # A `$ ` prompt line outside code blocks.
 expect_fail prompt-line-outside-code "$install" '$a\
 \
