@@ -88,6 +88,9 @@ expect_fail auto-install "FAIL: README says opena2a installs" 's|^npm install -g
 expect_fail auto-install-space "FAIL: README says opena2a installs" 's|^npm install -g opena2a-cli .*|npm install -g opena2a-cli      # Full suite (auto install HMA, Secretless, ai-trust)|'
 expect_fail installs-automatically "FAIL: README says opena2a installs" 's|^npm install -g opena2a-cli .*|npm install -g opena2a-cli      # One CLI; installs the other tools automatically|'
 expect_fail automatically-installs "FAIL: README says opena2a installs" 's|^brew install opena2a-org/tap/opena2a  .*|brew install opena2a-org/tap/opena2a   # One CLI; automatically installs HMA, Secretless, ai-trust|'
+expect_fail installed-automatically "FAIL: README says opena2a installs" '$a\
+\
+HackMyAgent, Secretless AI and ai-trust are installed automatically.'
 # The backticks below are Markdown, not command substitution.
 # shellcheck disable=SC2016
 expect_fail pinned "FAIL: README says opena2a-cli pins" 's|are set by `opena2a-cli`|are pinned by `opena2a-cli`|'
@@ -96,6 +99,13 @@ expect_pass comment-in-code-block '/^hackmyagent secure  *# Full security scan$/
 # Run the scanner'
 expect_pass chained-install 's|^brew install opena2a-org/tap/opena2a$|brew install opena2a-org/tap/opena2a \&\& opena2a --version|'
 expect_pass chained-upgrade 's|^brew upgrade opena2a .*|brew upgrade opena2a; opena2a --version|'
+# "install" and "automatic" in a sentence that names no standalone tool.
+expect_pass install-then-automatic-checks '$a\
+\
+Install the formula, then opena2a runs automatic checks.'
+expect_pass automatic-install-of-dependencies '$a\
+\
+Homebrew runs an automatic install of the formula dependencies.'
 
 expect_bad_path missing-file "$tmp/missing/README.md"
 expect_bad_path directory "$tmp"
