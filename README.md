@@ -154,7 +154,7 @@ brew upgrade                    # Upgrade every outdated formula, these included
 brew upgrade opena2a            # Or upgrade one formula you installed
 ```
 
-Name only formulae you installed: `brew upgrade` stops with `Refusing to load formula ... from untrusted tap` on a formula from this tap that is not installed.
+Name only formulae you installed: `brew upgrade` stops with `Refusing to load formula ... from untrusted tap` on a formula from this tap that you have not installed by its tap-qualified name.
 
 ## Alternative Installation
 

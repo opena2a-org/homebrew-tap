@@ -19,28 +19,46 @@
 set -euo pipefail
 
 if [ $# -gt 0 ]; then
+  if [ ! -f "$1" ]; then
+    echo "FAIL: not a file: $1"
+    exit 1
+  fi
   readme="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 fi
 cd "$(dirname "$0")/.."
 readme=${readme:-$PWD/README.md}
 fail=0
 
-formulae=$(ls Formula | sed -n 's/\.rb$//p' | tr '\n' ' ')
+formulae=
+for f in Formula/*.rb; do
+  f=${f#Formula/}
+  formulae+="${f%.rb} "
+done
 
+# Both brew checks split a line into commands at ;, &, &&, | and || and read
+# arguments only from a command that is itself `brew install` or
+# `brew upgrade`, so `brew install opena2a-org/tap/opena2a && opena2a --version`
+# is one install of one formula.
 bare=$(awk -v formulae="$formulae" '
   BEGIN { split(formulae, f, " "); for (i in f) known[f[i]] = 1 }
   /^[$[:space:]]*brew install / {
-    args = $0
-    sub(/#.*/, "", args)
-    sub(/^[$[:space:]]*brew install /, "", args)
-    n = split(args, a, /[[:space:]]+/)
-    for (i = 1; i <= n; i++) {
-      if (a[i] == "" || a[i] ~ /^-/) continue
-      name = a[i]
-      if (sub(/^opena2a-org\/tap\//, "", name) && (name in known)) continue
-      print FNR ": " $0
-      break
+    line = $0
+    sub(/#.*/, "", line)
+    m = split(line, cmds, /[;&|]/)
+    bad = 0
+    for (c = 1; c <= m && !bad; c++) {
+      args = cmds[c]
+      if (!sub(/^[$[:space:]]*brew install /, "", args)) continue
+      n = split(args, a, /[[:space:]]+/)
+      for (i = 1; i <= n; i++) {
+        if (a[i] == "" || a[i] ~ /^-/) continue
+        name = a[i]
+        if (sub(/^opena2a-org\/tap\//, "", name) && (name in known)) continue
+        bad = 1
+        break
+      }
     }
+    if (bad) print FNR ": " $0
   }' "$readme")
 if [ -n "$bare" ]; then
   echo "FAIL: brew install of a formula not named opena2a-org/tap/<formula in Formula/>:"
@@ -50,13 +68,19 @@ fi
 
 upgrade=$(awk '
   /^[$[:space:]]*brew upgrade / {
-    args = $0
-    sub(/#.*/, "", args)
-    sub(/^[$[:space:]]*brew upgrade /, "", args)
-    n = split(args, a, /[[:space:]]+/)
-    count = 0
-    for (i = 1; i <= n; i++) if (a[i] != "" && a[i] !~ /^-/) count++
-    if (count > 1) print FNR ": " $0
+    line = $0
+    sub(/#.*/, "", line)
+    m = split(line, cmds, /[;&|]/)
+    bad = 0
+    for (c = 1; c <= m; c++) {
+      args = cmds[c]
+      if (!sub(/^[$[:space:]]*brew upgrade /, "", args)) continue
+      n = split(args, a, /[[:space:]]+/)
+      count = 0
+      for (i = 1; i <= n; i++) if (a[i] != "" && a[i] !~ /^-/) count++
+      if (count > 1) bad = 1
+    }
+    if (bad) print FNR ": " $0
   }' "$readme")
 if [ -n "$upgrade" ]; then
   echo "FAIL: brew upgrade names several formulae, which fails for any not installed:"
@@ -66,7 +90,8 @@ fi
 
 uninstalled=$(awk -v formulae="$formulae" '
   BEGIN { split(formulae, f, " "); for (i in f) if (f[i] != "opena2a") standalone[f[i]] = 1 }
-  /^#+ / { section = $0; delete named }
+  # A "# comment" line inside a fenced block is shell, not a heading.
+  !incode && /^#+ / { section = $0; delete named }
   {
     line = $0
     while (match(line, /opena2a-org\/tap\/[a-z0-9-]+/)) {
