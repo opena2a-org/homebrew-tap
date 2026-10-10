@@ -134,9 +134,19 @@ check_before_30 "opena2a --version line" "$(grep -nxF "opena2a $version" "$readm
 
 # Neither the formula nor `npm install -g opena2a-cli` puts hackmyagent,
 # secretless-ai or ai-trust on PATH; they are private dependencies of opena2a.
-# Catches auto-install, autoinstall and auto install, "automatically installs"
-# and "installs ... automatically" within one sentence.
-autoinstall=$(grep -niE 'auto[-[:space:]]?install|automatic[a-z]*[[:space:]]+install|install[a-z]*[^.]*automatic' "$readme" || true)
+# Catches auto-install, autoinstall and auto install, and "automatically
+# installs" and "installs ... automatically" in a sentence that also names a
+# standalone tool or says "tools". A sentence with "install" and "automatic"
+# that names none of them, such as "Install the formula, then opena2a runs
+# automatic checks.", passes.
+autoinstall=$(awk '{
+  line = tolower($0)
+  if (line ~ /auto[-[:space:]]?install/) { print FNR ":" $0; next }
+  n = split(line, sentence, ".")
+  for (i = 1; i <= n; i++)
+    if (sentence[i] ~ /automatic[a-z]*[[:space:]]+install|install.*automatic/ &&
+        sentence[i] ~ /tools|hma|hackmyagent|secretless|ai-trust/) { print FNR ":" $0; next }
+}' "$readme")
 if [ -n "$autoinstall" ]; then
   echo "FAIL: README says opena2a installs the standalone tools:"
   echo "$autoinstall"
