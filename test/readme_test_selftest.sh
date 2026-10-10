@@ -59,15 +59,27 @@ reported_lines() {
     END { exit bad || !changed }' README.md <(tr '\000' ' ' < "$1") "$2"
 }
 
+# names_line <output> <text> succeeds when a "<line>: <text>" line of the
+# output holds exactly that text. The text is read from the environment, so a
+# backslash in it stays a backslash.
+names_line() {
+  want=$2 awk '
+    match($0, /^[0-9]+: /) && substr($0, RLENGTH + 1) == ENVIRON["want"] { found = 1 }
+    END { exit !found }' "$1"
+}
+
 if ! out=$(check README.md); then
   echo "FAIL: README.md itself does not pass:"
   echo "$out"
   fail=1
 fi
 
-# expect_fail <name> <expected FAIL message> <sed script>
+# expect_fail <name> <expected FAIL message> <sed script> [<line text>...]
+# The output must also name a line with each line text given, such as every
+# line of a command that continues over several.
 expect_fail() {
-  local name=$1 message=$2 script=$3 copy="$tmp/$1.md" out="$tmp/$1.out"
+  local name=$1 message=$2 script=$3 copy="$tmp/$1.md" out="$tmp/$1.out" text
+  shift 3
   cases=$((cases + 1))
   edit "$script" "$copy"
   if cmp -s README.md "$copy"; then
@@ -84,6 +96,15 @@ expect_fail() {
     echo "FAIL: $name: expected the edited line as \"<line>: <text>\", got:"
     cat "$out"
     fail=1
+  else
+    for text in "$@"; do
+      if ! names_line "$out" "$text"; then
+        echo "FAIL: $name: expected the line \"$text\" as \"<line>: $text\", got:"
+        cat "$out"
+        fail=1
+        break
+      fi
+    done
   fi
 }
 
@@ -229,9 +250,23 @@ expect_fail install-brew-path "$install" 's|^brew install opena2a-org/tap/opena2
 expect_fail install-after-sudo-user "$install" 's|^brew install opena2a-org/tap/opena2a$|sudo -u admin brew install hackmyagent|'
 expect_fail install-in-if "$install" 's|^brew install opena2a-org/tap/opena2a$|if brew install hackmyagent; then opena2a --version; fi|'
 expect_fail install-in-group "$install" 's|^brew install opena2a-org/tap/opena2a$|{ brew install hackmyagent; }|'
+# Each prefix word readme_test.sh reads before brew, on its own.
+for word in sudo doas env command exec nohup time nice arch caffeinate xargs \
+  'if' 'then' 'else' 'elif' 'do' 'while' 'until' '!' '{'; do
+  case $word in
+    '!') label=not ;;
+    '{') label=group ;;
+    *) label=$word ;;
+  esac
+  expect_fail "install-after-prefix-$label" "$install" "s|^brew install opena2a-org/tap/opena2a\$|$word brew install hackmyagent|"
+done
 # A command that continues on the next line names both lines.
 expect_fail install-continued "$install" 's|^brew install opena2a-org/tap/opena2a$|brew install \\\
-  hackmyagent|'
+  hackmyagent|' "brew install \\" '  hackmyagent'
+# A backslash after a blank ends the word before it, so a word at the start of
+# the next line is a word of its own, not the end of install.
+expect_fail install-continued-at-column-0 "$install" 's|^brew install opena2a-org/tap/opena2a$|brew install \\\
+hackmyagent|' "brew install \\" 'hackmyagent'
 # A `$ ` prompt line outside code blocks.
 expect_fail prompt-line-outside-code "$install" '$a\
 \
@@ -255,13 +290,21 @@ expect_fail fence-in-block-quote "$install" '$a\
 > ```bash\
 > cd /tmp \&\& brew install hackmyagent\
 > ```'
-# A ``` line inside a ```` fence does not close it.
+# A ```bash line inside a ```` fence does not close it.
 expect_fail long-fence-around-fence "$install" '$a\
 \
 ````markdown\
 ```bash\
 cd /tmp \&\& brew install hackmyagent\
 ```\
+````'
+# A bare ``` line inside a ```` fence is shorter than the fence, so it does
+# not close it either and the command after it is still in the code block.
+expect_fail bare-fence-in-long-fence "$install" '$a\
+\
+````markdown\
+```\
+cd /tmp \&\& brew install hackmyagent\
 ````'
 expect_fail upgrade-several "$upgrade" 's|^brew upgrade opena2a .*|brew upgrade opena2a secretless-ai hackmyagent ai-trust|'
 expect_fail upgrade-after-descriptor-redirect "$upgrade" 's|^brew upgrade opena2a .*|brew upgrade opena2a 2>\&1 hackmyagent|'
@@ -404,6 +447,15 @@ Use `brew tap opena2a-org/tap && brew install opena2a-org/tap/opena2a` to instal
 expect_pass install-in-prose-after-semicolon '$a\
 \
 Use the full name; brew install opena2a alone is refused.'
+# A ```` line closes a ``` fence, so the prose after it is not read as a
+# command.
+expect_pass longer-fence-closes-fence '$a\
+\
+```bash\
+brew install opena2a-org/tap/opena2a\
+````\
+\
+Do not run cd /tmp \&\& brew install hackmyagent: Homebrew refuses the bare name.'
 # CRLF line ends, and a byte that is not valid UTF-8 or a NUL byte in prose.
 expect_pass crlf "s/\$/${cr}/"
 expect_pass invalid-byte-in-prose "\$a\\
