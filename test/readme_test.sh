@@ -13,7 +13,8 @@
 #   opena2a does not put those commands on PATH;
 # - the Quick Start shows captured install and `opena2a --version` output for the
 #   version Formula/opena2a.rb ships, before README line 30;
-# - nothing claims that installing opena2a also installs the standalone tools.
+# - nothing claims that installing opena2a also installs the standalone tools;
+# - nothing calls the copies opena2a-cli bundles pinned.
 # Run from anywhere: bash test/readme_test.sh [README]
 set -euo pipefail
 
@@ -108,10 +109,21 @@ check_before_30 "opena2a --version line" "$(grep -nxF "opena2a $version" "$readm
 
 # Neither the formula nor `npm install -g opena2a-cli` puts hackmyagent,
 # secretless-ai or ai-trust on PATH; they are private dependencies of opena2a.
-autoinstall=$(grep -niE 'auto-?install' "$readme" || true)
+# Catches auto-install, autoinstall and auto install, "automatically installs"
+# and "installs ... automatically" within one sentence.
+autoinstall=$(grep -niE 'auto[-[:space:]]?install|automatic[a-z]*[[:space:]]+install|install[a-z]*[^.]*automatic' "$readme" || true)
 if [ -n "$autoinstall" ]; then
   echo "FAIL: README says opena2a installs the standalone tools:"
   echo "$autoinstall"
+  fail=1
+fi
+
+# opena2a-cli gives some of its bundled tools as version ranges, not exact
+# versions, so its copies are not pinned.
+pinned=$(grep -niE 'bundle.*pinned|pinned.*bundle' "$readme" || true)
+if [ -n "$pinned" ]; then
+  echo "FAIL: README says opena2a-cli pins its bundled tools:"
+  echo "$pinned"
   fail=1
 fi
 
