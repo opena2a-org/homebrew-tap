@@ -15,19 +15,32 @@ Install the OpenA2A security tools with Homebrew. Four CLIs that protect AI agen
 ## Quick Start
 
 ```bash
-brew tap opena2a-org/tap
-brew install opena2a            # Full suite (includes HMA, Secretless, ai-trust)
+brew install opena2a-org/tap/opena2a   # One CLI; bundles HMA, Secretless, ai-trust
+opena2a --version
 ```
+
+Output on a fresh Linux arm64 machine with Homebrew 7.0.9 (2026-10-09); the Cellar path differs on macOS:
+
+```text
+$ brew install opena2a-org/tap/opena2a
+...
+/home/linuxbrew/.linuxbrew/Cellar/opena2a/0.10.13: 8,316 files, 354.1MB, built in 9 seconds
+$ opena2a --version
+opena2a 0.10.13
+Telemetry: on (opt-out: OPENA2A_TELEMETRY=off  •  details: opena2a.org/telemetry)
+```
+
+Use the full `opena2a-org/tap/<formula>` name: it taps this repository and trusts only that formula. After a plain `brew tap`, current Homebrew refuses `brew install opena2a` with `Refusing to load formula ... from untrusted tap`.
 
 Or install individual tools standalone:
 
 ```bash
-brew install secretless-ai      # Secret protection only
-brew install hackmyagent        # Security scanning only
-brew install ai-trust           # Trust verification only
+brew install opena2a-org/tap/secretless-ai   # Secret protection only
+brew install opena2a-org/tap/hackmyagent     # Security scanning only
+brew install opena2a-org/tap/ai-trust        # Trust verification only
 ```
 
-> **Note:** `opena2a` bundles all three tools as dependencies. Install it for the full suite, or install individual formulas if you only need one capability.
+> **Note:** `opena2a` bundles its own copies of HackMyAgent, Secretless AI and ai-trust for its subcommands, but puts only the `opena2a` command on your PATH. Install the individual formulae for the standalone `hackmyagent`, `secretless-ai` and `ai-trust` commands.
 
 ## Formulae
 
@@ -45,7 +58,7 @@ brew install ai-trust           # Trust verification only
 **One CLI for all OpenA2A security tools.** Scan, protect, benchmark, and monitor AI agents from a single command. Detect Shadow AI -- unmanaged agents and MCP servers running in your environment. Bundles HackMyAgent, Secretless AI, and ai-trust as integrated subcommands.
 
 ```bash
-brew install opena2a
+brew install opena2a-org/tap/opena2a
 
 opena2a init                    # Initialize security config
 opena2a protect                 # Protect MCP configs, skills, manifests
@@ -65,7 +78,7 @@ Full documentation: [opena2a.org/cli](https://github.com/opena2a-org/opena2a)
 **AI coding tools can read your secrets. Secretless makes them invisible.** Prevents API keys, tokens, and credentials from leaking into AI coding tool contexts. Works with Claude Code, Cursor, GitHub Copilot, Windsurf, Cline, and Aider.
 
 ```bash
-brew install secretless-ai
+brew install opena2a-org/tap/secretless-ai
 
 secretless-ai init              # Set up protection for your project
 secretless-ai secret set KEY    # Store a secret (encrypted locally)
@@ -84,7 +97,7 @@ Full documentation: [opena2a.org/secretless](https://github.com/opena2a-org/secr
 **Find what can go wrong before an attacker does.** Security scanner for MCP servers, A2A agents, LangChain tools, CrewAI setups, and other AI agent frameworks. 310 static checks, 29 NanoMind semantic checks, 164 adversarial payloads as of 2026-08-25 (hackmyagent 0.32.0), auto-fix with rollback.
 
 ```bash
-brew install hackmyagent
+brew install opena2a-org/tap/hackmyagent
 
 hackmyagent secure              # Full security scan
 hackmyagent secure --deep       # LLM-powered semantic analysis
@@ -103,7 +116,7 @@ Full documentation: [hackmyagent.com](https://github.com/opena2a-org/hackmyagent
 **Check the trust score of any AI package before you install it.** Queries the OpenA2A trust graph for security scans, community consensus, dependency risk, and known advisories.
 
 ```bash
-brew install ai-trust
+brew install opena2a-org/tap/ai-trust
 
 ai-trust check server-filesystem  # MCP shorthand (resolves to @modelcontextprotocol/server-filesystem)
 ai-trust audit package.json       # Audit all dependencies
