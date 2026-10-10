@@ -1,2 +1,8 @@
 # Scan cache that hackmyagent writes into the directory it scans
 .hackmyagent-cache/
+
+# Credential and key files, so one is never committed by accident
+.env
+secrets.json
+*.pem
+*.key
