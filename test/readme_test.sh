@@ -3,7 +3,8 @@
 # - every `brew install` names the tap, because current Homebrew refuses a bare
 #   name from an untrusted third-party tap;
 # - the Quick Start shows captured install and `opena2a --version` output for the
-#   version Formula/opena2a.rb ships, before README line 30.
+#   version Formula/opena2a.rb ships, before README line 30;
+# - nothing claims that installing opena2a also installs the standalone tools.
 # Run from anywhere: bash test/readme_test.sh
 set -euo pipefail
 
@@ -36,6 +37,15 @@ check_before_30() {
 
 check_before_30 "brew install line" "$(grep -nF "/Cellar/opena2a/$version: " README.md | head -1 | cut -d: -f1)"
 check_before_30 "opena2a --version line" "$(grep -nxF "opena2a $version" README.md | head -1 | cut -d: -f1)"
+
+# Neither the formula nor `npm install -g opena2a-cli` puts hackmyagent,
+# secretless-ai or ai-trust on PATH; they are private dependencies of opena2a.
+autoinstall=$(grep -niE 'auto-?install' README.md || true)
+if [ -n "$autoinstall" ]; then
+  echo "FAIL: README says opena2a installs the standalone tools:"
+  echo "$autoinstall"
+  fail=1
+fi
 
 if [ "$fail" -eq 0 ]; then
   echo "PASS: README install commands and captured output match opena2a $version"

@@ -147,11 +147,13 @@ brew upgrade opena2a secretless-ai hackmyagent ai-trust
 ## Alternative Installation
 
 ```bash
-npm install -g opena2a-cli      # Full suite (auto-installs HMA, Secretless, ai-trust)
+npm install -g opena2a-cli      # One CLI; bundles HMA, Secretless, ai-trust
 npm install -g secretless-ai    # Standalone
 npm install -g hackmyagent      # Standalone
 npm install -g ai-trust         # Standalone
 ```
+
+As with the formula, `opena2a-cli` puts only the `opena2a` command on your PATH; its bundled copies of HackMyAgent, Secretless AI and ai-trust are pinned by `opena2a-cli` and can be older than the standalone packages.
 
 ## License
 
