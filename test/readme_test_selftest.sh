@@ -42,6 +42,14 @@ edit() {
   sed -e "$1" README.md | tr '\001' '\000' > "$2"
 }
 
+# sed_literal <text> prints the one-line text with a backslash before each \,
+# & and |, so that in the replacement of a s|...|...| command every byte of it
+# is inserted as it is: & would repeat the matched text, | would end the
+# command and \ would escape the byte after it.
+sed_literal() {
+  printf '%s\n' "$1" | sed 's/[\\&|]/\\&/g'
+}
+
 # reported_lines <copy> <output> succeeds when every "<line>: <text>" line of
 # the output names a line of the copy and starts with that line's text, and at
 # least one of them names a line that the edit changed or added. A NUL byte in
@@ -250,7 +258,15 @@ expect_fail install-brew-path "$install" 's|^brew install opena2a-org/tap/opena2
 expect_fail install-after-sudo-user "$install" 's|^brew install opena2a-org/tap/opena2a$|sudo -u admin brew install hackmyagent|'
 expect_fail install-in-if "$install" 's|^brew install opena2a-org/tap/opena2a$|if brew install hackmyagent; then opena2a --version; fi|'
 expect_fail install-in-group "$install" 's|^brew install opena2a-org/tap/opena2a$|{ brew install hackmyagent; }|'
-# Each prefix word readme_test.sh reads before brew, on its own.
+# sed_literal inserts a word holding &, | or \ as it is.
+for word in 'a&b' 'a|b' 'a\b' '\1' '&&' 'a\\|&b'; do
+  if ! got=$(printf 'X\n' | sed -e "s|X|$(sed_literal "$word")|" 2>&1) || [ "$got" != "$word" ]; then
+    echo "FAIL: sed_literal: expected \"$word\" in the replacement, got \"$got\""
+    fail=1
+  fi
+done
+# Each prefix word readme_test.sh reads before brew, on its own. The copy must
+# hold the word as it is written here.
 for word in sudo doas env command exec nohup time nice arch caffeinate xargs \
   'if' 'then' 'else' 'elif' 'do' 'while' 'until' '!' '{'; do
   case $word in
@@ -258,7 +274,11 @@ for word in sudo doas env command exec nohup time nice arch caffeinate xargs \
     '{') label=group ;;
     *) label=$word ;;
   esac
-  expect_fail "install-after-prefix-$label" "$install" "s|^brew install opena2a-org/tap/opena2a\$|$word brew install hackmyagent|"
+  expect_fail "install-after-prefix-$label" "$install" "s|^brew install opena2a-org/tap/opena2a\$|$(sed_literal "$word") brew install hackmyagent|"
+  if ! grep -qxF -- "$word brew install hackmyagent" "$tmp/install-after-prefix-$label.md"; then
+    echo "FAIL: install-after-prefix-$label: the copy has no line \"$word brew install hackmyagent\""
+    fail=1
+  fi
 done
 # A command that continues on the next line names both lines.
 expect_fail install-continued "$install" 's|^brew install opena2a-org/tap/opena2a$|brew install \\\
