@@ -306,6 +306,14 @@ expect_fail bare-fence-in-long-fence "$install" '$a\
 ```\
 cd /tmp \&\& brew install hackmyagent\
 ````'
+# A ```` line inside a ````` fence is shorter than the fence too, so a fence
+# of five or more backticks keeps its full length.
+expect_fail four-backtick-fence-in-five-backtick-fence "$install" '$a\
+\
+`````markdown\
+````\
+cd /tmp \&\& brew install hackmyagent\
+`````'
 expect_fail upgrade-several "$upgrade" 's|^brew upgrade opena2a .*|brew upgrade opena2a secretless-ai hackmyagent ai-trust|'
 expect_fail upgrade-after-descriptor-redirect "$upgrade" 's|^brew upgrade opena2a .*|brew upgrade opena2a 2>\&1 hackmyagent|'
 expect_fail upgrade-two-commands "$upgrade" 's|^brew upgrade opena2a .*|brew upgrade opena2a; brew upgrade hackmyagent|'
