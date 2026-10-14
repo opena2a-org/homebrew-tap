@@ -1,16 +1,13 @@
-> **[OpenA2A](https://github.com/opena2a-org/opena2a)**: [CLI](https://github.com/opena2a-org/opena2a) · [HackMyAgent](https://github.com/opena2a-org/hackmyagent) · [Secretless AI](https://github.com/opena2a-org/secretless-ai) · [AIM](https://github.com/opena2a-org/agent-identity-management) · [Browser Guard](https://github.com/opena2a-org/AI-BrowserGuard) · [DVAA](https://github.com/opena2a-org/damn-vulnerable-ai-agent) · **Homebrew Tap**
-
 # OpenA2A Homebrew Tap
 
-[![Status: stable](https://img.shields.io/badge/status-stable-green)](./STATUS.md)
+[![Status: stable](https://img.shields.io/badge/status-stable-green)](STATUS.md)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Formulae](https://img.shields.io/badge/formulae-4-brightgreen)]()
+
+> **[OpenA2A](https://github.com/opena2a-org)**: [CLI](https://github.com/opena2a-org/opena2a) · [HackMyAgent](https://github.com/opena2a-org/hackmyagent) · [Secretless](https://github.com/opena2a-org/secretless-ai) · [AIM](https://github.com/opena2a-org/agent-identity-management) · [Browser Guard](https://github.com/opena2a-org/ai-browserguard) · [DVAA](https://github.com/opena2a-org/damn-vulnerable-ai-agent)
+
+[Website](https://opena2a.org) · [Docs](https://opena2a.org/cli) · [Discord](https://discord.gg/uRZa3KXgEn)
 
 Install the OpenA2A security tools with Homebrew. Four CLIs that protect AI agent ecosystems -- scan for vulnerabilities, keep secrets out of AI context, verify trust, and enforce behavioral governance.
-
-[Website](https://opena2a.org) | [CLI Docs](https://opena2a.org/cli) | [OASB Standards](https://oasb.ai) | [GitHub](https://github.com/opena2a-org)
-
----
 
 ## Quick Start
 

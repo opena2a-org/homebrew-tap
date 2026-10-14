@@ -439,12 +439,22 @@ expect_fail installed-automatically-when-you-install "FAIL: README says opena2a 
 HackMyAgent is installed automatically when you install opena2a.'
 expect_fail pinned "FAIL: README says opena2a-cli pins" 's|are set by `opena2a-cli`|are pinned by `opena2a-cli`|'
 # Captured output before line 30, read as a whole line.
-expect_fail version-line-30 "FAIL: captured opena2a --version line" '/^## Quick Start$/i\
-This tap holds the OpenA2A formulae.'
-expect_fail install-line-30 "FAIL: captured brew install line" '/^## Quick Start$/i\
-This tap holds the OpenA2A formulae.\
-\
-It has four.'
+# Each case moves its line to E + 31, the first line past the 30 lines after
+# E, the first README line that starts "> **[OpenA2A" (0 if there is none),
+# so that a change to the README header does not move the copy back in range.
+eco=$(grep -n '^> \*\*\[OpenA2A' README.md | head -1 | cut -d: -f1 || true)
+eco=${eco:-0}
+# below_e_plus_30 <line> prints a sed script that adds lines of prose above
+# the Quick Start until README line <line> sits at line E + 31.
+below_e_plus_30() {
+  local script="/^## Quick Start\$/i\\" i
+  for ((i = $1; i < eco + 31; i++)); do
+    script+=$'\nThis tap holds the OpenA2A formulae.\\'
+  done
+  printf '%s\n' "${script%\\}"
+}
+expect_fail version-line-30 "FAIL: captured opena2a --version line" "$(below_e_plus_30 "$(grep -nxE 'opena2a [0-9][0-9.]*' README.md | head -1 | cut -d: -f1)")"
+expect_fail install-line-30 "FAIL: captured brew install line" "$(below_e_plus_30 "$(grep -nF '/Cellar/opena2a/' README.md | head -1 | cut -d: -f1)")"
 expect_missing install-line-missing "FAIL: README has no captured brew install line" '/\/Cellar\/opena2a\//d'
 expect_missing version-line-not-whole "FAIL: README has no captured opena2a --version line" 's|^opena2a [0-9][0-9.]*$|&-beta|'
 
