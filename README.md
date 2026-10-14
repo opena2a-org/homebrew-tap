@@ -16,7 +16,7 @@ brew install opena2a-org/tap/opena2a   # One CLI; bundles HMA, Secretless, ai-tr
 opena2a --version
 ```
 
-Output on a fresh Linux arm64 machine with Homebrew 7.0.9 (2026-10-09); the Cellar path differs on macOS:
+What `brew install opena2a-org/tap/opena2a` and `opena2a --version` print on Linux, trimmed ([capture details](docs/captures/quick-start.md)); the Cellar path differs on macOS:
 
 ```text
 $ brew install opena2a-org/tap/opena2a
@@ -41,12 +41,14 @@ brew install opena2a-org/tap/ai-trust        # Trust verification only
 
 ## Formulae
 
-| Formula | Version | Package |
-|---------|---------|---------|
-| `opena2a` | 0.10.13 | [opena2a-cli](https://www.npmjs.com/package/opena2a-cli) |
-| `secretless-ai` | 0.23.0 | [secretless-ai](https://www.npmjs.com/package/secretless-ai) |
-| `hackmyagent` | 0.32.0 | [hackmyagent](https://www.npmjs.com/package/hackmyagent) |
-| `ai-trust` | 0.7.6 | [ai-trust](https://www.npmjs.com/package/ai-trust) |
+| Formula | Package | Formula file |
+|---------|---------|--------------|
+| `opena2a` | [opena2a-cli](https://www.npmjs.com/package/opena2a-cli) | [Formula/opena2a.rb](Formula/opena2a.rb) |
+| `secretless-ai` | [secretless-ai](https://www.npmjs.com/package/secretless-ai) | [Formula/secretless-ai.rb](Formula/secretless-ai.rb) |
+| `hackmyagent` | [hackmyagent](https://www.npmjs.com/package/hackmyagent) | [Formula/hackmyagent.rb](Formula/hackmyagent.rb) |
+| `ai-trust` | [ai-trust](https://www.npmjs.com/package/ai-trust) | [Formula/ai-trust.rb](Formula/ai-trust.rb) |
+
+Each formula file names the npm release it installs.
 
 ---
 
@@ -57,16 +59,16 @@ brew install opena2a-org/tap/ai-trust        # Trust verification only
 ```bash
 brew install opena2a-org/tap/opena2a
 
-opena2a init                    # Initialize security config
-opena2a protect                 # Protect MCP configs, skills, manifests
-opena2a guard                   # Runtime guardrails for agent execution
+opena2a init                    # Assess project security posture (read-only)
+opena2a protect                 # Migrate credentials to an encrypted vault
+opena2a guard                   # Sign and verify config file integrity
 opena2a scan-soul               # Behavioral governance (OASB-2)
-opena2a scan <package>          # Scan a package (via HackMyAgent)
+opena2a check <package>         # Is this package safe to install?
 opena2a secrets                 # Manage secrets (via Secretless AI)
-opena2a shield                  # Detect shadow AI in your environment
+opena2a detect                  # Discover AI agents running on this machine
 ```
 
-Full documentation: [opena2a.org/cli](https://github.com/opena2a-org/opena2a)
+Full documentation: [github.com/opena2a-org/opena2a](https://github.com/opena2a-org/opena2a)
 
 ---
 
@@ -78,33 +80,33 @@ Full documentation: [opena2a.org/cli](https://github.com/opena2a-org/opena2a)
 brew install opena2a-org/tap/secretless-ai
 
 secretless-ai init              # Set up protection for your project
-secretless-ai secret set KEY    # Store a secret (encrypted locally)
+secretless-ai secret set KEY    # Store a secret
 secretless-ai run -- node app   # Run with secrets injected as env vars
-secretless-ai verify            # Check for exposed secrets in transcripts
+secretless-ai verify            # Confirm secrets are hidden from AI
 secretless-ai protect-mcp       # Protect MCP server credential configs
-secretless-ai doctor            # System health check
+secretless-ai doctor            # Diagnose shell profile issues
 ```
 
-Full documentation: [opena2a.org/secretless](https://github.com/opena2a-org/secretless-ai)
+Full documentation: [github.com/opena2a-org/secretless-ai](https://github.com/opena2a-org/secretless-ai)
 
 ---
 
 ### hackmyagent
 
-**Find what can go wrong before an attacker does.** Security scanner for MCP servers, A2A agents, LangChain tools, CrewAI setups, and other AI agent frameworks. 310 static checks, 29 NanoMind semantic checks, 164 adversarial payloads as of 2026-08-25 (hackmyagent 0.32.0), auto-fix with rollback.
+**Find what can go wrong before an attacker does.** Security scanner for MCP servers, A2A agents, LangChain tools, and other AI agent frameworks, with auto-fix and rollback. `hackmyagent --help` prints its current check and payload counts ([formula notes](docs/formulae.md#hackmyagent)).
 
 ```bash
 brew install opena2a-org/tap/hackmyagent
 
 hackmyagent secure              # Full security scan
-hackmyagent secure --deep       # LLM-powered semantic analysis
+hackmyagent secure --deep       # Static, semantic and behavioral analysis
 hackmyagent scan-soul           # 72 behavioral governance controls (OASB-2)
 hackmyagent harden-soul         # Generate hardened config from results
 hackmyagent trust <package>     # Check package trust before installing
 hackmyagent secure --category credentials,injection,permissions
 ```
 
-Full documentation: [hackmyagent.com](https://github.com/opena2a-org/hackmyagent)
+Full documentation: [github.com/opena2a-org/hackmyagent](https://github.com/opena2a-org/hackmyagent)
 
 ---
 
@@ -163,6 +165,12 @@ npm install -g ai-trust         # Standalone
 ```
 
 As with the formula, `opena2a-cli` puts only the `opena2a` command on your PATH; its bundled copies of HackMyAgent, Secretless AI and ai-trust are set by `opena2a-cli` and can be older than the standalone packages.
+
+## Documentation
+
+- [docs/formulae.md](docs/formulae.md): formula notes the README links instead of repeating
+- [docs/captures/quick-start.md](docs/captures/quick-start.md): where and when the Quick Start capture was taken
+- [STATUS.md](STATUS.md): maintenance status of this tap
 
 ## License
 
