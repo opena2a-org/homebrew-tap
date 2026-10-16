@@ -28,7 +28,13 @@
 # - the capture page shows captured install and `opena2a --version` output for
 #   the version Formula/opena2a.rb ships;
 # - nothing claims that installing opena2a also installs the standalone tools;
-# - nothing calls the copies opena2a-cli bundles pinned.
+# - nothing calls the copies opena2a-cli bundles pinned;
+# - no line states a count of a tool's checks, controls or payloads, which
+#   changes with each release of that tool and which nothing here reads: the
+#   README points to the tool's --help, and docs/formulae.md keeps the counts
+#   it once carried;
+# - a number of CLIs or formulae the README states is the number of formula
+#   files in Formula/.
 # A fenced code block opens at a line of three or more ` or ~, also indented
 # or in a block quote, and closes at a line of at least as many of the same
 # character. An indented code block and an HTML <pre> block are read as
@@ -89,9 +95,11 @@ fi
 fail=0
 
 formulae=
+shipped=0
 for f in Formula/*.rb; do
   f=${f#Formula/}
   formulae+="${f%.rb} "
+  shipped=$((shipped + 1))
 done
 
 # fenced is awk source for the checks that read code blocks. scan(line) reads
@@ -470,6 +478,50 @@ pinned=$(text | awk 'tolower($0) ~ /bundle.*pinned|pinned.*bundle/ { print FNR }
 if [ -n "$pinned" ]; then
   echo "FAIL: README says opena2a-cli pins its bundled tools:"
   echo "$pinned"
+  fail=1
+fi
+
+# A count of a tool's checks, controls or payloads is a number, up to three
+# words, then "checks", "controls" or "payloads", or a number joined by "-" to
+# one of those words, as in "323 checks", "72 behavioral governance controls"
+# or "72-control". A number right after a letter, digit, ".", "," or "-" is
+# not read, so neither the parts of a version such as 0.32.0 nor the 2 of
+# OASB-2 is a count.
+word='[[:space:]]+[a-z][a-z-]*'
+counts=$(text | tr '[:upper:]' '[:lower:]' | awk -v word="$word" '
+  BEGIN {
+    count = "(^|[^0-9a-z.,-])[0-9][0-9,]*(" word ")?(" word ")?(" word ")?"
+    count = count "([[:space:]]+(checks|controls|payloads)|-(checks?|controls?|payloads?))([^a-z]|$)"
+  }
+  $0 ~ count { print FNR }' | numbered)
+if [ -n "$counts" ]; then
+  echo "FAIL: README states a count of a tool's checks, controls or payloads, which changes with its releases:"
+  echo "$counts"
+  fail=1
+fi
+
+# A number of CLIs or formulae, in digits or as a word from one to twelve,
+# right before "CLIs", "formulae" or "formulas", as in "Four CLIs", must be
+# the number of formula files in Formula/.
+miscounted=$(text | tr '[:upper:]' '[:lower:]' |
+  { grep -n -o -E '[[:alnum:]]+[[:space:]]+(clis|formulae|formulas)([^[:alnum:]]|$)' || true; } |
+  awk -v shipped="$shipped" '
+    BEGIN {
+      split("one two three four five six seven eight nine ten eleven twelve", name, " ")
+      for (i = 1; i <= 12; i++) value[name[i]] = i
+    }
+    {
+      colon = index($0, ":")
+      number = substr($0, colon + 1)
+      sub(/[[:space:]].*/, "", number)
+      if (number ~ /^[0-9]+$/) number += 0
+      else if (number in value) number = value[number]
+      else next
+      if (number != shipped) print substr($0, 1, colon - 1)
+    }' | sort -un | numbered)
+if [ -n "$miscounted" ]; then
+  echo "FAIL: README counts CLIs or formulae other than the $shipped formula files in Formula/:"
+  echo "$miscounted"
   fail=1
 fi
 

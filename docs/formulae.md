@@ -15,3 +15,11 @@ Security scanner for AI agents. 323 checks, 164 attack payloads, auto-fix.
 ```
 
 Run `hackmyagent --help` for the counts of the version you have installed.
+
+The README's `hackmyagent scan-soul` example carried this comment until the count moved here:
+
+```bash
+hackmyagent scan-soul           # 72 behavioral governance controls (OASB-2)
+```
+
+In the hackmyagent 0.32.0 package, the `scan-soul` help text gives the number of security controls as the size of the governance control catalog, which defines 72 controls. Run `hackmyagent scan-soul --help` for the count of the version you have installed.

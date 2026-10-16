@@ -98,7 +98,7 @@ brew install opena2a-org/tap/hackmyagent
 
 hackmyagent secure              # Full security scan
 hackmyagent secure --deep       # Static, semantic and behavioral analysis
-hackmyagent scan-soul           # 72 behavioral governance controls (OASB-2)
+hackmyagent scan-soul           # Behavioral governance (OASB-2)
 hackmyagent harden-soul         # Generate hardened config from results
 hackmyagent trust <package>     # Check package trust before installing
 hackmyagent secure --category credentials,injection,permissions

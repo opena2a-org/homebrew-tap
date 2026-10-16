@@ -233,6 +233,10 @@ expect_long_line() {
 
 install="FAIL: brew install of a formula"
 upgrade="FAIL: brew upgrade names several formulae"
+counted="FAIL: README states a count of a tool's checks, controls or payloads"
+miscount="FAIL: README counts CLIs or formulae other than the"
+shipped=$(find Formula -maxdepth 1 -name '*.rb' | wc -l | tr -d ' ')
+numbers=(zero one two three four five six seven eight nine ten eleven twelve)
 tab=$'\t'
 cr=$'\r'
 nbsp=$'\302\240'
@@ -465,6 +469,31 @@ expect_fail installed-automatically-when-you-install "FAIL: README says opena2a 
 \
 HackMyAgent is installed automatically when you install opena2a.'
 expect_fail pinned "FAIL: README says opena2a-cli pins" 's|are set by `opena2a-cli`|are pinned by `opena2a-cli`|'
+# A count of a tool's checks, controls or payloads, in a code comment or in
+# prose.
+expect_fail control-count-in-comment "$counted" '/^hackmyagent scan-soul /s|# Behavioral governance|# 72 behavioral governance controls|' \
+  'hackmyagent scan-soul           # 72 behavioral governance controls (OASB-2)'
+expect_fail check-and-payload-counts "$counted" '$a\
+\
+HackMyAgent runs 323 checks and 164 attack payloads.'
+expect_fail count-with-thousands-separator "$counted" '$a\
+\
+The scanner runs 1,200 security checks.'
+expect_fail hyphenated-count "$counted" '$a\
+\
+scan-soul reads the 72-control catalog.'
+expect_fail count-in-capitals "$counted" '$a\
+\
+72 GOVERNANCE CONTROLS.'
+# A number of CLIs or formulae that is not the number of files in Formula/,
+# as a word, in digits, and after a correct count on the same line.
+expect_fail formula-count-word "$miscount" "s|^Install the OpenA2A security tools with Homebrew\\. [A-Za-z]* CLIs|Install the OpenA2A security tools with Homebrew. ${numbers[shipped + 1]} CLIs|"
+expect_fail formula-count-digits "$miscount" "\$a\\
+\\
+This tap holds $((shipped + 1)) formulae."
+expect_fail formula-count-after-correct-count "$miscount" "\$a\\
+\\
+$shipped CLIs from $((shipped + 1)) formulas."
 # The captured prompt lines before line 30, read as whole lines.
 # Each case moves its line to E + 31, the first line past the 30 lines after
 # E, the first README line that starts "> **[OpenA2A" (0 if there is none),
@@ -607,6 +636,28 @@ opena2a does not install hackmyagent automatically.'
 expect_pass is-not-auto-installed '$a\
 \
 HackMyAgent is not auto-installed by the formula.'
+# A version before "checks", the 2 of OASB-2, and a number more than three
+# words before "checks" are not counts.
+expect_pass version-before-checks '$a\
+\
+hackmyagent 0.32.0 checks MCP servers.'
+expect_pass standard-name-before-controls '$a\
+\
+scan-soul reads the OASB-2 controls.'
+expect_pass number-four-words-before-checks '$a\
+\
+Step 1 of the setup runs checks.'
+# The number of files in Formula/, in digits and as a word, and a number
+# before the singular "CLI" or "formula".
+expect_pass formula-count-digits-correct "\$a\\
+\\
+This tap holds $shipped formulae."
+expect_pass formula-count-word-correct "\$a\\
+\\
+The ${numbers[shipped]} formulas are listed below."
+expect_pass number-before-singular "\$a\\
+\\
+Each of the $((shipped + 1)) steps installs one CLI from one formula."
 
 expect_bad_path missing-file "FAIL: not a file: $tmp/missing/README.md" "$tmp/missing/README.md"
 expect_bad_path directory "FAIL: not a file: $tmp" "$tmp"
@@ -629,6 +680,10 @@ fi
 expect_long_line many-separators "$install" 'brew install opena2a-org/tap/opena2a' ';' 2000000 'brew install hackmyagent'
 expect_long_line many-arguments "$upgrade" 'brew upgrade opena2a' ' --x' 1000000 ' hackmyagent'
 expect_long_line many-tap-names "PASS: README install commands" '' 'opena2a-org/tap/opena2a ' 150000 ''
+# The count is the last number on the first line; every count of CLIs on the
+# second is the number of files in Formula/, so that copy still passes.
+expect_long_line many-numbers "$counted" '' '1 ' 1000000 'checks'
+expect_long_line many-formula-counts "PASS: README install commands" '' "$shipped CLIs " 500000 ''
 
 if [ "$fail" -eq 0 ]; then
   echo "PASS: readme_test.sh passes README.md and $passes correct edited copies, fails all $cases broken edited copies, rejects $paths paths that are not readable files, and checks $long long lines in under $limit s of processor time each"
