@@ -19,8 +19,14 @@
 # - a section that runs hackmyagent, secretless-ai or ai-trust in a code block
 #   names that formula's opena2a-org/tap/ install first, because installing
 #   opena2a does not put those commands on PATH;
-# - the Quick Start shows captured install and `opena2a --version` output for the
-#   version Formula/opena2a.rb ships, before README line 30;
+# - the Quick Start shows the captured `$ brew install opena2a-org/tap/opena2a`
+#   and `$ opena2a --version` lines before README line 30, and each line of
+#   that capture other than a `...` elision is in the capture on the capture
+#   page, in the same order. The capture page is docs/captures/quick-start.md,
+#   or the file given as the second argument, and a capture is the first fenced
+#   code block with a line that starts with `$ `;
+# - the capture page shows captured install and `opena2a --version` output for
+#   the version Formula/opena2a.rb ships;
 # - nothing claims that installing opena2a also installs the standalone tools;
 # - nothing calls the copies opena2a-cli bundles pinned.
 # A fenced code block opens at a line of three or more ` or ~, also indented
@@ -29,7 +35,7 @@
 # prose, and formula names that brew reads from standard input, as through
 # xargs, are not read.
 # A FAIL that names README lines prints each as "<line>: <text>".
-# Run from anywhere: bash test/readme_test.sh [README]
+# Run from anywhere: bash test/readme_test.sh [README [CAPTURE PAGE]]
 set -euo pipefail
 
 # Every tool below reads the README one byte at a time, so a byte that is not
@@ -40,17 +46,20 @@ export LC_ALL=C
 # a line at a NUL, grep reads a file with one as binary, and bash drops one
 # from the output of a command. Every check reads the README through text,
 # which also turns each no-break space (U+00A0) into a space, so that every
-# check sees one as a blank. A FAIL prints README lines from raw.
+# check sees one as a blank. A FAIL prints README lines from raw. Given a
+# file, raw and text read that file instead, as the capture page checks do.
 nbsp=$(printf '\302\240')
 raw() {
-  tr '\000' ' ' < "$readme"
+  tr '\000' ' ' < "${1:-$readme}"
 }
 
 text() {
-  raw | sed "s/$nbsp/ /g"
+  raw "$@" | sed "s/$nbsp/ /g"
 }
 
-if [ $# -gt 0 ]; then
+# readable <path> ends the run with one FAIL line unless the path is a file
+# the user can read.
+readable() {
   if [ ! -f "$1" ]; then
     echo "FAIL: not a file: $1"
     exit 1
@@ -59,10 +68,24 @@ if [ $# -gt 0 ]; then
     echo "FAIL: cannot read: $1"
     exit 1
   fi
+}
+
+if [ $# -gt 0 ]; then
+  readable "$1"
   readme="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+fi
+if [ $# -gt 1 ]; then
+  readable "$2"
+  page="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
+  pagename=$2
 fi
 cd "$(dirname "$0")/.."
 readme=${readme:-$PWD/README.md}
+if [ -z "${page:-}" ]; then
+  pagename=docs/captures/quick-start.md
+  readable "$pagename"
+  page=$PWD/$pagename
+fi
 fail=0
 
 formulae=
@@ -315,19 +338,74 @@ fi
 check_before_30() {
   local label=$1 line=$2
   if [ -z "$line" ]; then
-    echo "FAIL: README has no captured $label for opena2a $version"
+    echo "FAIL: README has no captured $label"
     fail=1
   elif [ "$line" -ge 30 ]; then
-    echo "FAIL: captured $label for opena2a $version is not before README line 30:"
+    echo "FAIL: captured $label is not before README line 30:"
     echo "$line" | numbered
     fail=1
   fi
 }
 
-# The carriage returns of a README with CRLF line ends are dropped before a
+# check_on_page <label> <grep options> <pattern> fails unless a line of the
+# capture page matches the pattern.
+check_on_page() {
+  if ! text "$page" | tr -d '\r' | grep "$2" -- "$3" > /dev/null; then
+    echo "FAIL: $pagename has no captured $1 for opena2a $version"
+    fail=1
+  fi
+}
+
+# The carriage returns of a file with CRLF line ends are dropped before a
 # whole line is compared.
-check_before_30 "brew install line" "$(text | grep -nF "/Cellar/opena2a/$version: " | head -1 | cut -d: -f1)"
-check_before_30 "opena2a --version line" "$(text | tr -d '\r' | grep -nxF "opena2a $version" | head -1 | cut -d: -f1)"
+check_before_30 "brew install line" "$(text | tr -d '\r' | grep -nxF '$ brew install opena2a-org/tap/opena2a' | head -1 | cut -d: -f1)"
+check_before_30 "opena2a --version line" "$(text | tr -d '\r' | grep -nxF '$ opena2a --version' | head -1 | cut -d: -f1)"
+check_on_page "brew install line" -F "/Cellar/opena2a/$version: "
+check_on_page "opena2a --version line" -xF "opena2a $version"
+
+# The README capture trims the capture on the capture page: its lines, less
+# each `...` elision line, are lines of the page capture in the same order.
+# trimmed prints the number of each README capture line that is not, read
+# from the page capture past the line the README line before it matched. A
+# fence left open runs to the end of its file.
+trimmed=$(awk "$fenced"'
+  function finish(    k) {
+    if (prompt && !(file in have)) {
+      have[file] = 1
+      for (k = 1; k <= cnt; k++) {
+        if (file == 1) { readme[k] = cur[k]; line[k] = at[k] } else capture[k] = cur[k]
+      }
+      if (file == 1) lines = cnt; else captured = cnt
+    }
+    cnt = prompt = 0
+  }
+  FILENAME != name {
+    if (name != "") finish()
+    name = FILENAME
+    file = (FILENAME == ARGV[1]) ? 1 : 2
+    incode = 0
+  }
+  {
+    scan($0)
+    if (isfence) { if (!incode) finish(); next }
+    if (!incode) next
+    cur[++cnt] = body
+    at[cnt] = FNR
+    if (body ~ /^\$ /) prompt = 1
+  }
+  END {
+    finish()
+    for (i = 1; i <= lines; i++) {
+      if (readme[i] == "...") continue
+      for (k = j + 1; k <= captured && capture[k] != readme[i]; k++) ;
+      if (k <= captured) j = k; else print line[i]
+    }
+  }' <(text | tr -d '\r') <(text "$page" | tr -d '\r') | numbered)
+if [ -n "$trimmed" ]; then
+  echo "FAIL: README capture shows lines the capture on $pagename does not hold in that order:"
+  echo "$trimmed"
+  fail=1
+fi
 
 # Neither the formula nor `npm install -g opena2a-cli` puts hackmyagent,
 # secretless-ai or ai-trust on PATH; they are private dependencies of opena2a.

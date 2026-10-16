@@ -6,16 +6,20 @@
 # Runs test/readme_test.sh against README.md, which must pass; against edited
 # copies of it that each break one rule, which must fail with that rule's
 # message and name the edited line by its number and text, or, when the rule
-# needs a line the copy lacks, print only that message; against edited copies
-# that stay correct, which must pass; against paths that are not readable
-# files, which must print one FAIL line; and against copies with one very long
-# line added, which must get the right verdict in bounded processor time.
+# needs a line the copy lacks, print only that message; against README.md
+# with edited copies of the capture page, docs/captures/quick-start.md, which
+# must print only the message for the line the copy lacks; against edited
+# copies that stay correct, which must pass; against paths that are not
+# readable files, which must print one FAIL line; and against copies with one
+# very long line added, which must get the right verdict in bounded processor
+# time.
 # readme_test.sh runs under a UTF-8 locale where the system has one, as it does
 # for most users.
 # Run from anywhere: bash test/readme_test_selftest.sh
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+page=docs/captures/quick-start.md
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 fail=0
@@ -136,6 +140,28 @@ expect_missing() {
   fi
 }
 
+# expect_page_missing <name> <label> <sed script>
+# The edit removes or changes a line the capture page needs: README.md with
+# the edited copy of the page must fail, and the only output must be the
+# message that the copy has no captured <label>.
+expect_page_missing() {
+  local name=$1 copy="$tmp/$1.page.md" out message
+  message="FAIL: $copy has no captured $2"
+  cases=$((cases + 1))
+  sed -e "$3" "$page" > "$copy"
+  if cmp -s "$page" "$copy"; then
+    echo "FAIL: $name: the edit did not change $page"
+    fail=1
+  elif out=$(check README.md "$copy" 2>&1); then
+    echo "FAIL: $name: readme_test.sh passed an edited capture page"
+    fail=1
+  elif [[ $out != "$message"* || $out == *$'\n'* ]]; then
+    echo "FAIL: $name: expected only \"$message\", got:"
+    echo "$out"
+    fail=1
+  fi
+}
+
 # expect_pass <name> <sed script>
 # The copy must pass, and the only output must be the PASS line.
 expect_pass() {
@@ -156,12 +182,13 @@ expect_pass() {
   fi
 }
 
-# expect_bad_path <name> <path> <expected output>
+# expect_bad_path <name> <expected output> <argument>...
 expect_bad_path() {
-  local name=$1 path=$2 expected=$3 out
+  local name=$1 expected=$2 out
+  shift 2
   paths=$((paths + 1))
-  if out=$(check "$path" 2>&1); then
-    echo "FAIL: $name: readme_test.sh passed $path"
+  if out=$(check "$@" 2>&1); then
+    echo "FAIL: $name: readme_test.sh passed $*"
     fail=1
   elif [ "$out" != "$expected" ]; then
     echo "FAIL: $name: expected only \"$expected\", got:"
@@ -438,7 +465,7 @@ expect_fail installed-automatically-when-you-install "FAIL: README says opena2a 
 \
 HackMyAgent is installed automatically when you install opena2a.'
 expect_fail pinned "FAIL: README says opena2a-cli pins" 's|are set by `opena2a-cli`|are pinned by `opena2a-cli`|'
-# Captured output before line 30, read as a whole line.
+# The captured prompt lines before line 30, read as whole lines.
 # Each case moves its line to E + 31, the first line past the 30 lines after
 # E, the first README line that starts "> **[OpenA2A" (0 if there is none),
 # so that a change to the README header does not move the copy back in range.
@@ -453,10 +480,31 @@ below_e_plus_30() {
   done
   printf '%s\n' "${script%\\}"
 }
-expect_fail version-line-30 "FAIL: captured opena2a --version line" "$(below_e_plus_30 "$(grep -nxE 'opena2a [0-9][0-9.]*' README.md | head -1 | cut -d: -f1)")"
-expect_fail install-line-30 "FAIL: captured brew install line" "$(below_e_plus_30 "$(grep -nF '/Cellar/opena2a/' README.md | head -1 | cut -d: -f1)")"
-expect_missing install-line-missing "FAIL: README has no captured brew install line" '/\/Cellar\/opena2a\//d'
-expect_missing version-line-not-whole "FAIL: README has no captured opena2a --version line" 's|^opena2a [0-9][0-9.]*$|&-beta|'
+expect_fail version-line-30 "FAIL: captured opena2a --version line" "$(below_e_plus_30 "$(grep -nxF '$ opena2a --version' README.md | head -1 | cut -d: -f1)")"
+expect_fail install-line-30 "FAIL: captured brew install line" "$(below_e_plus_30 "$(grep -nxF '$ brew install opena2a-org/tap/opena2a' README.md | head -1 | cut -d: -f1)")"
+expect_missing install-line-missing "FAIL: README has no captured brew install line" '/^\$ brew install opena2a-org\/tap\/opena2a$/d'
+# The longer line is also a capture line the page does not hold, so the
+# output names it.
+expect_fail version-line-not-whole "FAIL: README has no captured opena2a --version line" 's|^\$ opena2a --version$|& --json|'
+
+# The capture page holds the install and --version output for the version
+# Formula/opena2a.rb ships, read as a whole line for --version.
+expect_page_missing page-install-line-missing "brew install line" '/\/Cellar\/opena2a\//d'
+expect_page_missing page-install-line-other-version "brew install line" 's|/Cellar/opena2a/[0-9][0-9.]*:|/Cellar/opena2a/0.0.1:|'
+expect_page_missing page-version-line-not-whole "opena2a --version line" 's|^opena2a [0-9][0-9.]*$|&-beta|'
+
+# The README capture is the page capture less some lines, in the same order.
+# A `...` line is an elision and need not be on the page.
+trim="FAIL: README capture shows lines the capture on $page does not hold"
+expect_fail capture-line-changed "$trim" 's|^Telemetry: on |Telemetry: off |'
+expect_fail capture-other-version "$trim" '/^\$ opena2a --version$/a\
+opena2a 0.0.1'
+expect_fail capture-out-of-order "$trim" '/^\$ opena2a --version$/{h;d;};/^Telemetry: /G'
+shown=$(grep -xE 'opena2a [0-9][0-9.]*' "$page" | head -1)
+expect_pass capture-version-line-kept '/^\$ opena2a --version$/a\
+'"$shown"
+expect_pass capture-more-elision '/^\$ opena2a --version$/a\
+...'
 
 expect_pass comment-in-code-block '/^hackmyagent secure  *# Full security scan$/i\
 # Run the scanner'
@@ -560,14 +608,19 @@ expect_pass is-not-auto-installed '$a\
 \
 HackMyAgent is not auto-installed by the formula.'
 
-expect_bad_path missing-file "$tmp/missing/README.md" "FAIL: not a file: $tmp/missing/README.md"
-expect_bad_path directory "$tmp" "FAIL: not a file: $tmp"
+expect_bad_path missing-file "FAIL: not a file: $tmp/missing/README.md" "$tmp/missing/README.md"
+expect_bad_path directory "FAIL: not a file: $tmp" "$tmp"
+expect_bad_path missing-page "FAIL: not a file: $tmp/missing/quick-start.md" README.md "$tmp/missing/quick-start.md"
 # A file the user cannot read. Skipped when running as root, who can read it.
 unreadable="$tmp/unreadable.md"
 cp README.md "$unreadable"
 chmod 000 "$unreadable"
+unreadable_page="$tmp/unreadable.page.md"
+cp "$page" "$unreadable_page"
+chmod 000 "$unreadable_page"
 if [ ! -r "$unreadable" ]; then
-  expect_bad_path unreadable "$unreadable" "FAIL: cannot read: $unreadable"
+  expect_bad_path unreadable "FAIL: cannot read: $unreadable" "$unreadable"
+  expect_bad_path unreadable-page "FAIL: cannot read: $unreadable_page" README.md "$unreadable_page"
 fi
 
 # The first two lines are read to their end: the bare name, or the second

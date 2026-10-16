@@ -16,14 +16,12 @@ brew install opena2a-org/tap/opena2a   # One CLI; bundles HMA, Secretless, ai-tr
 opena2a --version
 ```
 
-What `brew install opena2a-org/tap/opena2a` and `opena2a --version` print on Linux, trimmed ([capture details](docs/captures/quick-start.md)); the Cellar path differs on macOS:
+What `brew install opena2a-org/tap/opena2a` and `opena2a --version` print on Linux, trimmed of the lines that name the version ([capture details](docs/captures/quick-start.md)):
 
 ```text
 $ brew install opena2a-org/tap/opena2a
 ...
-/home/linuxbrew/.linuxbrew/Cellar/opena2a/0.10.13: 8,316 files, 354.1MB, built in 9 seconds
 $ opena2a --version
-opena2a 0.10.13
 Telemetry: on (opt-out: OPENA2A_TELEMETRY=off  •  details: opena2a.org/telemetry)
 ```
 

@@ -1,6 +1,6 @@
 # Quick Start capture
 
-The [README](../../README.md) Quick Start shows the capture below, trimmed in place. Its provenance, as published with it:
+The [README](../../README.md) Quick Start shows the capture below without the two lines that name the opena2a version. `test/readme_test.sh` checks those two lines here against the version [Formula/opena2a.rb](../../Formula/opena2a.rb) installs, and checks that each other line the README shows is here in the same order. The capture's provenance, as published with it:
 
 Output on a fresh Linux arm64 machine with Homebrew 7.0.9 (2026-10-09); the Cellar path differs on macOS:
 
