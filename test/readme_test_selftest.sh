@@ -235,6 +235,8 @@ install="FAIL: brew install of a formula"
 upgrade="FAIL: brew upgrade names several formulae"
 counted="FAIL: README states a count of a tool's checks, controls or payloads"
 miscount="FAIL: README counts CLIs or formulae other than the"
+npm_install="FAIL: npm install of a package no formula in Formula/ installs"
+npm_link="FAIL: npmjs.com link to a package other than the one a formula in Formula/ installs"
 shipped=$(find Formula -maxdepth 1 -name '*.rb' | wc -l | tr -d ' ')
 numbers=(zero one two three four five six seven eight nine ten eleven twelve)
 tab=$'\t'
@@ -494,6 +496,37 @@ This tap holds $((shipped + 1)) formulae."
 expect_fail formula-count-after-correct-count "$miscount" "\$a\\
 \\
 $shipped CLIs from $((shipped + 1)) formulas."
+# An npm package that no formula in Formula/ installs, named by npm install or
+# an alias, after a prefix word or a flag, with a version, scoped, as a
+# placeholder, after a package a formula installs, continued on the next line
+# (both lines are named), and on a prose line whose first word is npm.
+expect_fail npm-install-unknown-package "$npm_install" 's|^npm install -g opena2a-cli |npm install -g opena2a |'
+expect_fail npm-install-alias "$npm_install" 's|^npm install -g ai-trust |npm i -g opena2a |'
+expect_fail npm-install-add "$npm_install" 's|^npm install -g ai-trust |npm add -g opena2a |'
+expect_fail npm-install-after-sudo "$npm_install" 's|^npm install -g ai-trust |sudo npm install -g opena2a |'
+expect_fail npm-install-flag-before-install "$npm_install" 's|^npm install -g ai-trust |npm -g install opena2a |'
+expect_fail npm-install-version "$npm_install" 's|^npm install -g ai-trust |npm install -g opena2a@latest |'
+expect_fail npm-install-scoped "$npm_install" 's|^npm install -g ai-trust |npm install -g @opena2a/cli |'
+expect_fail npm-install-placeholder "$npm_install" 's|^npm install -g ai-trust |npm install -g <package> |'
+expect_fail npm-install-second-argument "$npm_install" 's|^npm install -g ai-trust |npm install -g ai-trust opena2a |'
+expect_fail npm-install-continued "$npm_install" 's|^npm install -g ai-trust .*|npm install -g \\\
+  opena2a|' "npm install -g \\" '  opena2a'
+expect_fail npm-install-line-outside-code "$npm_install" '$a\
+\
+npm install -g opena2a'
+# An npmjs.com link to a package no formula installs, in a Formulae row to the
+# package of another formula, in prose, scoped, and with no package name.
+expect_fail npm-link-unknown-package "$npm_link" 's|npmjs\.com/package/opena2a-cli|npmjs.com/package/opena2a|'
+expect_fail npm-link-other-formula-package "$npm_link" 's|npmjs\.com/package/opena2a-cli|npmjs.com/package/hackmyagent|'
+expect_fail npm-link-in-prose "$npm_link" '$a\
+\
+See https://npmjs.com/package/opena2a for the package.'
+expect_fail npm-link-scoped "$npm_link" '$a\
+\
+See [the package](https://www.npmjs.com/package/@opena2a/cli).'
+expect_fail npm-link-no-name "$npm_link" '$a\
+\
+See [npm](https://www.npmjs.com/package/).'
 # The captured prompt lines before line 30, read as whole lines.
 # Each case moves its line to E + 31, the first line past the 30 lines after
 # E, the first README line that starts "> **[OpenA2A" (0 if there is none),
@@ -658,6 +691,28 @@ The ${numbers[shipped]} formulas are listed below."
 expect_pass number-before-singular "\$a\\
 \\
 Each of the $((shipped + 1)) steps installs one CLI from one formula."
+# A package a formula installs: with a version, by an alias, after a flag, and
+# linked with a path after its name, on a line that links no formula file, or
+# on one that links two. An npm command other than install, whole words only
+# (npm info is not npm i), and npm in prose are not read.
+expect_pass npm-install-version 's|^npm install -g opena2a-cli |npm install -g opena2a-cli@latest |'
+expect_pass npm-install-alias 's|^npm install -g ai-trust |npm i -g ai-trust |'
+expect_pass npm-install-flag-before-install 's|^npm install -g ai-trust |npm -g install ai-trust |'
+expect_pass npm-link-version-path 's|npmjs\.com/package/opena2a-cli)|npmjs.com/package/opena2a-cli/v/1.0.0)|'
+expect_pass npm-link-without-formula-file '$a\
+\
+The opena2a formula installs [opena2a-cli](https://www.npmjs.com/package/opena2a-cli).'
+expect_pass npm-link-with-two-formula-files '$a\
+\
+[Formula/opena2a.rb](Formula/opena2a.rb) and [Formula/hackmyagent.rb](Formula/hackmyagent.rb) install [hackmyagent](https://www.npmjs.com/package/hackmyagent).'
+expect_pass npm-info-is-not-install '$a\
+\
+```bash\
+npm info opena2a\
+```'
+expect_pass npm-install-in-prose '$a\
+\
+Use npm install -g opena2a-cli, not npm install -g opena2a.'
 
 expect_bad_path missing-file "FAIL: not a file: $tmp/missing/README.md" "$tmp/missing/README.md"
 expect_bad_path directory "FAIL: not a file: $tmp" "$tmp"
@@ -684,6 +739,12 @@ expect_long_line many-tap-names "PASS: README install commands" '' 'opena2a-org/
 # second is the number of files in Formula/, so that copy still passes.
 expect_long_line many-numbers "$counted" '' '1 ' 1000000 'checks'
 expect_long_line many-formula-counts "PASS: README install commands" '' "$shipped CLIs " 500000 ''
+# The package no formula installs is the last argument, and the last link, on
+# the first two lines. The third line links one formula file throughout and
+# the package that formula installs, so that copy still passes.
+expect_long_line many-npm-arguments "$npm_install" 'npm install -g' ' ai-trust' 400000 ' opena2a'
+expect_long_line many-npm-links "$npm_link" '' 'https://www.npmjs.com/package/opena2a-cli ' 100000 'https://www.npmjs.com/package/opena2a'
+expect_long_line many-formula-file-links "PASS: README install commands" '' '[Formula/opena2a.rb](Formula/opena2a.rb) ' 100000 'https://www.npmjs.com/package/opena2a-cli'
 
 if [ "$fail" -eq 0 ]; then
   echo "PASS: readme_test.sh passes README.md and $passes correct edited copies, fails all $cases broken edited copies, rejects $paths paths that are not readable files, and checks $long long lines in under $limit s of processor time each"
