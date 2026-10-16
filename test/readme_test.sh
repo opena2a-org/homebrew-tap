@@ -34,7 +34,15 @@
 #   README points to the tool's --help, and docs/formulae.md keeps the counts
 #   it once carried;
 # - a number of CLIs or formulae the README states is the number of formula
-#   files in Formula/.
+#   files in Formula/;
+# - each npm package the README installs or links is one that a formula in
+#   Formula/ installs (the package in its registry.npmjs.org url): each
+#   package argument of an npm install command, or of one of its aliases such
+#   as npm i, read as brew install is read and with any @<version> dropped,
+#   and the package in each npmjs.com/package/<name> link. On a line that
+#   links the file of one formula, as a row of the Formulae table does, a
+#   link names the package that formula installs. The links are read
+#   against the formula files, not fetched.
 # A fenced code block opens at a line of three or more ` or ~, also indented
 # or in a block quote, and closes at a line of at least as many of the same
 # character. An indented code block and an HTML <pre> block are read as
@@ -96,10 +104,20 @@ fail=0
 
 formulae=
 shipped=0
+# packages lists the npm package each formula downloads, read from the first
+# registry.npmjs.org url in its file, and installs pairs each formula with it
+# as <formula>=<package>.
+packages=
+installs=
 for f in Formula/*.rb; do
+  package=$(sed -nE 's|^[[:space:]]*url "https://registry\.npmjs\.org/(.+)/-/[^/"]+\.tgz".*|\1|p' "$f" | sed -n 1p)
   f=${f#Formula/}
   formulae+="${f%.rb} "
   shipped=$((shipped + 1))
+  if [ -n "$package" ]; then
+    packages+="$package "
+    installs+="${f%.rb}=$package "
+  fi
 done
 
 # fenced is awk source for the checks that read code blocks. scan(line) reads
@@ -141,7 +159,10 @@ fenced='
 # Both brew checks read a line as commands when it is in a fenced code block,
 # or, outside one, when its first word is brew, also after a `$ ` prompt or as
 # a path such as /opt/homebrew/bin/brew, so a line that starts with prose or
-# inline code is not read. A shell comment (a # at the start of a line or
+# inline code is not read. The npm install check reads npm the same way, and
+# also skips the flags between npm and install (npm -g install x); a flag
+# value given as the next word (--prefix dir) is read as a package, so it
+# fails, and npx is not read. A shell comment (a # at the start of a line or
 # after a blank or separator) is dropped from each line, and a line that then
 # ends with a backslash continues on the next one. The command line is split
 # into commands at ;, &, &&, |, ||, (, ) and `, so (brew install x),
@@ -185,32 +206,40 @@ numbered() {
     FNR in want { print FNR ": " $0 want[FNR] }' <(raw)
 }
 
-# brew_lines <install|upgrade> prints the number of every line of a command
-# line with a brew install command that names a formula not as
-# opena2a-org/tap/<formula in Formula/>, or of a command line whose brew
-# upgrade commands name more than one formula. A command line is one README
-# line, or several when a backslash ends each one but the last. A formula
-# named twice, or once with and once without opena2a-org/tap/, counts once.
-brew_lines() {
-  commands | awk -v verb="$1" -v formulae="$formulae" "$fenced"'
+# command_lines <brew|npm> <verbs> <names> prints the number of every line of
+# a command line with a brew install command that names a formula not as
+# opena2a-org/tap/<formula in Formula/>, with an npm install command that
+# names a package no formula in Formula/ installs, or of a command line whose
+# brew upgrade commands name more than one formula. <verbs> is the subcommand
+# and its aliases, separated by |, and <names> the formulae or packages it may
+# name. A command line is one README line, or several when a backslash ends
+# each one but the last. A formula named twice, or once with and once without
+# opena2a-org/tap/, counts once.
+command_lines() {
+  commands | awk -v tool="$1" -v verb="$2" -v names="$3" "$fenced"'
     BEGIN {
-      split(formulae, f, " "); for (i in f) known[f[i]] = 1
+      split(names, f, " "); for (i in f) known[f[i]] = 1
       split("sudo doas env command exec nohup time nice arch caffeinate xargs if then else elif do while until ! {", p, " ")
       for (i in p) prefix[p[i]] = 1
+      runner = "(^|/)" tool "$"
+      verbs = "^(" verb ")$"
+      lead = "^[$ ]*([^ ;]*/)?" tool " "
+      named = tool " +" (tool == "npm" ? "(-[^ ;]* +)*" : "") "(" verb ")"
     }
     # run reads the command whose words are a[1..cnt].
     function run(a, cnt,    i, j, runs, flags, name, tapped) {
       if (bad) return
       runs = flags = 0
       for (i = 1; i <= cnt; i++) {
-        if (a[i] ~ /(^|\/)brew$/) { runs = 1; break }
+        if (a[i] ~ runner) { runs = 1; break }
         if (i == 1 && a[i] == "$") continue
         if (a[i] ~ /^[A-Za-z_][A-Za-z0-9_]*=/) continue
         if (a[i] in prefix) { flags = 1; continue }
         if (flags && (a[i] ~ /^-/ || a[i - 1] ~ /^-/)) continue
         break
       }
-      if (!runs || i >= cnt || a[i + 1] != verb) return
+      if (tool == "npm") while (i < cnt && a[i + 1] ~ /^-/) i++
+      if (!runs || i >= cnt || a[i + 1] !~ verbs) return
       for (j = i + 2; j <= cnt; j++) {
         if (a[j] ~ /^-/) continue
         if (a[j] !~ /^<[^<>]+>$/ && a[j] ~ /^[0-9]*[<>]/) {
@@ -218,6 +247,14 @@ brew_lines() {
           continue
         }
         name = a[j]
+        if (tool == "npm") {
+          match(name, /^@?[^@]*/)
+          if (!(substr(name, 1, RLENGTH) in known)) {
+            bad = 1
+            return
+          }
+          continue
+        }
         tapped = sub(/^opena2a-org\/tap\//, "", name)
         if (verb == "install" && !(tapped && (name in known))) {
           bad = 1
@@ -276,21 +313,21 @@ brew_lines() {
       sub(/(^|[ ;])#.*/, "", line)
       glue = held && !after
       if (!held) {
-        if (!incode && line !~ /^[$ ]*([^ ;]*\/)?brew /) next
+        if (!incode && line !~ lead) next
         first = FNR
         bad = count = n = 0
         split("", seen)
       }
       cont = sub(/\\ *$/, "", line)
       if (line != "") after = line ~ / $/
-      if (held || cont || line ~ ("brew +" verb)) feed(line, glue, cont)
+      if (held || cont || line ~ named) feed(line, glue, cont)
       held = cont
       if (!held) finish(FNR)
     }
     END { if (held) finish(FNR) }' | numbered
 }
 
-bare=$(brew_lines install)
+bare=$(command_lines brew install "$formulae")
 if [ -n "$bare" ]; then
   echo "FAIL: brew install of a formula not named opena2a-org/tap/<formula in Formula/>:"
   echo "$bare"
@@ -299,10 +336,70 @@ fi
 
 # The formulae are counted over the whole command line, so `brew upgrade
 # opena2a; brew upgrade hackmyagent` names two.
-upgrade=$(brew_lines upgrade)
+upgrade=$(command_lines brew upgrade "$formulae")
 if [ -n "$upgrade" ]; then
   echo "FAIL: brew upgrade names several formulae, which fails for any not installed:"
   echo "$upgrade"
+  fail=1
+fi
+
+# The aliases are the ones `npm install --help` lists.
+npm=$(command_lines npm 'install|add|i|in|ins|inst|insta|instal|isnt|isnta|isntal|isntall' "$packages")
+if [ -n "$npm" ]; then
+  echo "FAIL: npm install of a package no formula in Formula/ installs:"
+  echo "$npm"
+  fail=1
+fi
+
+# linked reads the pieces between "/" on each line, so that the time stays
+# linear in its length: a link names <name> in the piece after a "package"
+# piece that follows a piece ending in npmjs.com, or @<scope>/<name> in that
+# piece and the next, and what follows the name, such as /v/<version>, is not
+# read. A formula file is <formula>.rb at the start of the piece after one
+# ending in Formula. Each line it fails is followed by the formula on it and
+# the package that formula installs, or by the linked package no formula
+# installs.
+linked=$(text | awk -v installs="$installs" '
+  BEGIN {
+    n = split(installs, pair, " ")
+    for (i = 1; i <= n; i++) {
+      eq = index(pair[i], "=")
+      package[substr(pair[i], 1, eq - 1)] = substr(pair[i], eq + 1)
+      known[substr(pair[i], eq + 1)] = 1
+    }
+  }
+  {
+    n = split($0, part, "/")
+    links = files = 0
+    split("", file)
+    for (i = 2; i <= n; i++) {
+      if (part[i - 1] ~ /(^|[^[:alnum:]_-])Formula$/ && match(part[i], /^[[:alnum:]@._+-]+\.rb/)) {
+        f = substr(part[i], 1, RLENGTH - 3)
+        if (!(f in file)) files++
+        file[f] = 1
+        last = f
+      }
+      if (i < 3 || part[i - 1] != "package" || part[i - 2] !~ /(^|[^[:alnum:]_-])npmjs\.com$/) continue
+      name = part[i]
+      if (name ~ /^@/) name = (i < n) ? name "/" part[i + 1] : ""
+      match(name, /^@?[[:alnum:]._~-]+(\/[[:alnum:]._~-]+)?/)
+      link[++links] = substr(name, 1, RLENGTH)
+    }
+    row = files == 1 && (last in package)
+    for (i = 1; i <= links; i++) {
+      if (row && link[i] != package[last]) {
+        print FNR "   (Formula/" last ".rb installs " package[last] ")"
+        break
+      }
+      if (!row && !(link[i] in known)) {
+        print FNR "   (no formula in Formula/ installs " link[i] ")"
+        break
+      }
+    }
+  }' | numbered)
+if [ -n "$linked" ]; then
+  echo "FAIL: npmjs.com link to a package other than the one a formula in Formula/ installs:"
+  echo "$linked"
   fail=1
 fi
 
