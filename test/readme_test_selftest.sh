@@ -533,10 +533,10 @@ See [npm](https://www.npmjs.com/package/).'
 # so that a change to the README header does not move the copy back in range.
 eco=$(grep -n '^> \*\*\[OpenA2A' README.md | head -1 | cut -d: -f1 || true)
 eco=${eco:-0}
-# below_e_plus_30 <line> prints a sed script that adds lines of prose above
-# the Quick Start until README line <line> sits at line E + 31.
+# below_e_plus_30 <line> prints a sed script that adds lines of prose below
+# the title until README line <line> sits at line E + 31.
 below_e_plus_30() {
-  local script="/^## Quick Start\$/i\\" i
+  local script="1a\\" i
   for ((i = $1; i < eco + 31; i++)); do
     script+=$'\nThis tap holds the OpenA2A formulae.\\'
   done

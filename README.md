@@ -1,22 +1,11 @@
 # OpenA2A Homebrew Tap
 
-[![Status: stable](https://img.shields.io/badge/status-stable-green)](STATUS.md)
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-
-> **[OpenA2A](https://github.com/opena2a-org)**: [CLI](https://github.com/opena2a-org/opena2a) · [HackMyAgent](https://github.com/opena2a-org/hackmyagent) · [Secretless](https://github.com/opena2a-org/secretless-ai) · [AIM](https://github.com/opena2a-org/agent-identity-management) · [Browser Guard](https://github.com/opena2a-org/ai-browserguard) · [DVAA](https://github.com/opena2a-org/damn-vulnerable-ai-agent)
-
-[Website](https://opena2a.org) · [Docs](https://opena2a.org/cli) · [Discord](https://discord.gg/uRZa3KXgEn)
-
 Install the OpenA2A security tools with Homebrew. Four CLIs that protect AI agent ecosystems -- scan for vulnerabilities, keep secrets out of AI context, verify trust, and enforce behavioral governance.
-
-## Quick Start
 
 ```bash
 brew install opena2a-org/tap/opena2a   # One CLI; bundles HMA, Secretless, ai-trust
 opena2a --version
 ```
-
-What `brew install opena2a-org/tap/opena2a` and `opena2a --version` print on Linux, trimmed of the lines that name the version ([capture details](docs/captures/quick-start.md)):
 
 ```text
 $ brew install opena2a-org/tap/opena2a
@@ -24,6 +13,17 @@ $ brew install opena2a-org/tap/opena2a
 $ opena2a --version
 Telemetry: on (opt-out: OPENA2A_TELEMETRY=off  •  details: opena2a.org/telemetry)
 ```
+
+[![Status: stable](https://img.shields.io/badge/status-stable-green)](STATUS.md)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
+> **[OpenA2A](https://github.com/opena2a-org)**: [CLI](https://github.com/opena2a-org/opena2a) · [HackMyAgent](https://github.com/opena2a-org/hackmyagent) · [Secretless](https://github.com/opena2a-org/secretless-ai) · [AIM](https://github.com/opena2a-org/agent-identity-management) · [Browser Guard](https://github.com/opena2a-org/ai-browserguard) · [DVAA](https://github.com/opena2a-org/damn-vulnerable-ai-agent)
+
+[Website](https://opena2a.org) · [Docs](https://opena2a.org/cli) · [Discord](https://discord.gg/uRZa3KXgEn)
+
+What `brew install opena2a-org/tap/opena2a` and `opena2a --version` print on Linux, trimmed of the lines that name the version ([capture details](docs/captures/quick-start.md)).
+
+## Quick Start
 
 Use the full `opena2a-org/tap/<formula>` name: it taps this repository and trusts only that formula. After a plain `brew tap`, current Homebrew refuses `brew install opena2a` with `Refusing to load formula ... from untrusted tap`.
 
